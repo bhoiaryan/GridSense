@@ -1,0 +1,110 @@
+\section{Approach}
+\label{sec:approach}
+
+\subsection{Data Collection \& Preparation}
+\label{subsec:data_preparation}
+
+GridSense AI ingests three primary data feeds specified by the HackOut'26 challenge:
+\begin{itemize}[leftmargin=1.5em, itemsep=0.2em]
+    \item \textbf{Weather Data:} Global Horizontal Irradiance (GHI), Direct Normal Irradiance (DNI), cloud cover percentage, ambient temperature, wind velocity at hub height, and atmospheric pressure.
+    \item \textbf{Historical Generation Telemetry:} Timestamped time-series records of past solar and wind output.
+    \item \textbf{Site-Level Metadata:} Installed capacity ($P_{\text{rated}}$), geographic coordinates, panel tilt/azimuth, and turbine hub heights.
+\end{itemize}
+
+The ingestion layer performs automated data schema validation, missing-value interpolation for telemetry dropouts, timestamp alignment to standard hourly intervals, and physical boundary verification (e.g., zero irradiance at night).
+
+\subsection{Renewable Generation Forecasting Pipeline}
+\label{subsec:forecasting_pipeline_sec}
+
+For the hackathon prototype, GridSense AI adopts **XGBoost (eXtreme Gradient Boosting)** for multi-step hourly generation forecasting across 24h, 48h, and 72h horizons (\cref{fig:forecasting_pipeline}). XGBoost is selected for its high computational efficiency on tabular data, non-linear interaction modeling, and rapid training cycles.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.30cm,
+        pipeBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=boxBg, text width=7.8cm, align=left, font=\scriptsize, inner sep=3pt},
+        arrow/.style={-{Stealth[scale=0.75]}, thick, color=darkSlate}
+    ]
+        \node[pipeBox] (p1) {\textbf{1. Multi-Modal Ingestion} \hfill \color{darkSlate!70}Historical Output, Weather Feeds, Site Specs};
+        \node[pipeBox, below=of p1] (p2) {\textbf{2. Data Preparation} \hfill \color{darkSlate!70}Imputation, Resampling, Timestamp Alignment};
+        \node[pipeBox, below=of p2] (p3) {\textbf{3. Feature Engineering} \hfill \color{darkSlate!70}Autoregressive Lags ($y_{t-1}, y_{t-24}$), Rolling Stats, Zenith};
+        \node[pipeBox, below=of p3] (p4) {\textbf{4. XGBoost Regression} \hfill \color{darkSlate!70}Multi-Step 24h--72h Horizon Inference};
+        \node[pipeBox, below=of p4] (p5) {\textbf{5. Generation Forecast Output} \hfill \color{darkSlate!70}Hourly Generation Trajectory ($\hat{y}_t$)};
+        \node[pipeBox, below=of p5, draw=accentTeal, fill=accentTeal!15] (p6) {\textbf{6. Uncertainty \& Risk Engine} \hfill \color{darkSlate!70}\textbf{Quantile Bands ($p_{10}, p_{50}, p_{90}$) \& Event Flags}};
+
+        \draw[arrow] (p1) -- (p2);
+        \draw[arrow] (p2) -- (p3);
+        \draw[arrow] (p3) -- (p4);
+        \draw[arrow] (p4) -- (p5);
+        \draw[arrow] (p5) -- (p6);
+    \end{tikzpicture}
+    \caption{AI/ML Forecasting Pipeline from multi-modal ingestion to uncertainty and risk indicators.}
+    \label{fig:forecasting_pipeline}
+\end{figure}
+
+The feature engineering pipeline constructs autoregressive lags ($y_{t-1}, y_{t-24}, y_{t-48}$), 6-hour rolling means and standard deviations, solar zenith angles, and seasonal day-of-year embeddings. Time-aware cross-validation is enforced to eliminate temporal data leakage.
+
+\subsection{Uncertainty \& Risk Analysis}
+\label{subsec:uncertainty_risk_analysis}
+
+To prevent misleading single-point assumptions, the platform generates **quantile prediction intervals** ($p_{10}, p_{50}, p_{90}$). For example:
+\begin{center}
+    \texttt{Expected Generation: } 80~MW \quad \textbar{} \quad \texttt{Prediction Range: } 72--88~MW \quad \textbar{} \quad \texttt{Confidence: } Moderate
+\end{center}
+\emph{(Note: Numerical values are illustrative examples.)}
+
+The system cross-references prediction intervals against scheduled demand to quantify two critical operational risk states:
+\begin{itemize}[leftmargin=1.5em, itemsep=0.15em]
+    \item \textbf{Surplus Risk:} Generation exceeds local hosting and export capacity, creating curtailment risk.
+    \item \textbf{Shortfall Risk:} Generation falls below demand baselines, threatening grid stability.
+\end{itemize}
+
+\subsection{Scenario Simulation (What-If Sandbox)}
+\label{subsec:scenario_simulation}
+
+GridSense AI provides an interactive what-if simulation sandbox allowing operators to evaluate contingency stress cases:
+\begin{itemize}[leftmargin=1.5em, itemsep=0.15em]
+    \item \textbf{Weather Shifts:} What if cloud cover increases by 30\% or wind speeds drop unexpectedly?
+    \item \textbf{Demand Perturbations:} What if peak electrical demand exceeds base schedules by 15~MW?
+    \item \textbf{Asset State Limitations:} What if battery State of Charge (SOC) is 40\% instead of 80\%, or a backup unit trips offline?
+\end{itemize}
+The system dynamically recalculates forecasts, risk boundaries, and candidate dispatch options in real time.
+
+\subsection{Decision Optimization \& Action Recommendation}
+\label{subsec:decision_optimization}
+
+The decision engine evaluates candidate dispatch responses under physical system constraints (\cref{fig:decision_pipeline}):
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.30cm,
+        pipeBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=boxBg, text width=7.8cm, align=left, font=\scriptsize, inner sep=3pt},
+        arrow/.style={-{Stealth[scale=0.75]}, thick, color=darkSlate}
+    ]
+        \node[pipeBox] (d1) {\textbf{1. Forecast \& Risk Input} \hfill \color{darkSlate!70}Hourly Point Trajectory + Prediction Intervals};
+        \node[pipeBox, below=of d1] (d2) {\textbf{2. Candidate Actions} \hfill \color{darkSlate!70}Storage Dispatch, Import/Export, Backup, Curtailment};
+        \node[pipeBox, below=of d2] (d3) {\textbf{3. Scenario Evaluation} \hfill \color{darkSlate!70}What-If Stress Testing \& Parameter Perturbations};
+        \node[pipeBox, below=of d3] (d4) {\textbf{4. Constraint Check} \hfill \color{darkSlate!70}Battery State, Ramp Limits, Intertie Capacity};
+        \node[pipeBox, below=of d4] (d5) {\textbf{5. Explainable Recommendation} \hfill \color{darkSlate!70}Action + Operational Reason + Expected Impact};
+        \node[pipeBox, below=of d5, draw=accentAmber!90, fill=accentAmber!10] (d6) {\textbf{6. Operator Decision} \hfill \color{darkSlate!70}\textbf{Human Supervisory Review \& Dispatch Approval}};
+
+        \draw[arrow] (d1) -- (d2);
+        \draw[arrow] (d2) -- (d3);
+        \draw[arrow] (d3) -- (d4);
+        \draw[arrow] (d4) -- (d5);
+        \draw[arrow] (d5) -- (d6);
+    \end{tikzpicture}
+    \caption{Decision \& Optimization operational flow ending in human operator approval.}
+    \label{fig:decision_pipeline}
+\end{figure}
+
+Candidate actions (BESS dispatch, grid transfers, backup activation, curtailment) are ranked across operational feasibility, cost, and carbon impact. Recommendations follow a clear explainability format:
+\begin{center}
+    \fbox{\parbox{0.92\textwidth}{\scriptsize
+        \textbf{\color{primaryNavy}RECOMMENDED ACTION:} Dispatch BESS at 18~MW from 17:30 to 19:30.\\
+        \textbf{\color{primaryNavy}OPERATIONAL REASON:} Solar generation falls 18~MW below scheduled demand; battery SOC (78\%) is sufficient to cover the shortfall.\\
+        \textbf{\color{primaryNavy}EXPECTED IMPACT:} Eliminates thermal peaker activation, reducing fuel costs and carbon emissions while maintaining grid frequency stability.
+    }}
+\end{center}
+The platform acts as an advisory decision-support system; it does not autonomously command physical grid hardware.

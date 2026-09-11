@@ -1,0 +1,166 @@
+\section{Decision \& Optimization Engine}
+\label{sec:decision_optimization}
+
+\subsection{From Forecast to Decision}
+\label{subsec:from_forecast_to_decision}
+
+While the forecasting engine predicts what is likely to happen across the 24--72 hour horizon, the Decision and Optimization Engine determines what operational responses should be considered.
+
+Its primary role is to evaluate impending renewable generation conditions, detect operational imbalances, and synthesize candidate dispatch actions under physical system constraints. The foundational operational progression is:
+\begin{center}
+    \textbf{\color{primaryNavy}Forecast + Risk $\longrightarrow$ Possible Actions $\longrightarrow$ Action Evaluation $\longrightarrow$ Recommended Action}
+\end{center}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.36cm,
+        pipeBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=boxBg, text width=7.8cm, align=left, font=\scriptsize, inner sep=3.5pt},
+        arrow/.style={-{Stealth[scale=0.8]}, thick, color=darkSlate}
+    ]
+        \node[pipeBox] (d1) {\textbf{1. Generation Forecast \& Risk Matrix} \hfill \color{darkSlate!70}Hourly Trajectory + Uncertainty Bands};
+        \node[pipeBox, below=of d1] (d2) {\textbf{2. Risk \& Imbalance Event Detection} \hfill \color{darkSlate!70}Surplus/Shortfall Windows, Volatility Alerts};
+        \node[pipeBox, below=of d2] (d3) {\textbf{3. Candidate Action Generation} \hfill \color{darkSlate!70}Storage Dispatch, Import/Export, Backup, Curtailment};
+        \node[pipeBox, below=of d3] (d4) {\textbf{4. What-If Scenario Simulation} \hfill \color{darkSlate!70}Operator Parameter Shifts (Weather, Demand, SOC)};
+        \node[pipeBox, below=of d4] (d5) {\textbf{5. Constraint \& Resource Evaluation} \hfill \color{darkSlate!70}Battery State, Ramp Rates, Interconnection Limits};
+        \node[pipeBox, below=of d5] (d6) {\textbf{6. Multi-Criteria Action Comparison} \hfill \color{darkSlate!70}Reliability, Cost Impact, Carbon Emissions, Wastage};
+        \node[pipeBox, below=of d6] (d7) {\textbf{7. Explainable Recommendation} \hfill \color{darkSlate!70}Structured Advice: Action + Reason + Impact};
+        \node[pipeBox, below=of d7, draw=accentAmber!90, fill=accentAmber!10] (d8) {\textbf{8. Operator Decision \& Review} \hfill \color{darkSlate!70}\textbf{Human-in-the-Loop Approval \& Supervisory Dispatch}};
+
+        \draw[arrow] (d1) -- (d2);
+        \draw[arrow] (d2) -- (d3);
+        \draw[arrow] (d3) -- (d4);
+        \draw[arrow] (d4) -- (d5);
+        \draw[arrow] (d5) -- (d6);
+        \draw[arrow] (d6) -- (d7);
+        \draw[arrow] (d7) -- (d8);
+    \end{tikzpicture}
+    \caption{Decision and Optimization Pipeline from forecast ingestion to human operator approval.}
+    \label{fig:decision_pipeline}
+\end{figure}
+
+As shown in \cref{fig:decision_pipeline}, the engine acts as an advisory decision-support layer, translating complex multi-variable constraints into actionable control-room guidance.
+
+\subsection{Risk \& Event Detection}
+\label{subsec:risk_event_detection}
+
+GridSense AI continuously scans forecast trajectories and prediction intervals to identify impending grid events before they manifest as operational emergencies. Key detected conditions include:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Renewable Shortfall:} Periods where expected renewable generation falls below scheduled base demand, threatening supply-demand balance.
+    \item \textbf{Renewable Surplus:} Hours where generation exceeds local demand and export limits, threatening network over-voltage or thermal congestion.
+    \item \textbf{High Forecast Dispersion:} Intervals where prediction intervals widen significantly ($p_{90} - p_{10}$ exceeds tolerance), requiring higher spinning reserves.
+    \item \textbf{Storage Opportunity Windows:} Surplus periods coinciding with low battery state of charge (SOC), ideal for economic energy absorption.
+    \item \textbf{Backup Commitment Windows:} Severe deficit periods where available storage is insufficient, requiring advance commitment of thermal units.
+    \item \textbf{Curtailment Risk Windows:} Unavoidable excess generation periods where storage is fully charged and export capacity is saturated.
+\end{itemize}
+
+Events are automatically scored and prioritized based on their projected severity, duration, and associated uncertainty.
+
+\subsection{Action Options}
+\label{subsec:action_options}
+
+Depending on resource availability and system topology, the decision engine evaluates candidate actions tailored to the specific imbalance state (\cref{fig:surplus_vs_shortfall}):
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.6cm and 0.8cm,
+        condBox/.style={rectangle, rounded corners=3pt, draw=primaryNavy, fill=boxBg, text width=5.2cm, align=center, font=\footnotesize\bfseries, inner sep=5pt},
+        branchBox/.style={rectangle, rounded corners=3pt, draw=borderGray, fill=white, text width=3.6cm, align=center, font=\scriptsize, inner sep=4pt},
+        shortBox/.style={rectangle, rounded corners=3pt, draw=accentRose!80, fill=accentRose!10, text width=3.6cm, align=center, font=\scriptsize, inner sep=4pt},
+        surpBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=accentTeal!10, text width=3.6cm, align=center, font=\scriptsize, inner sep=4pt},
+        arrow/.style={-{Stealth[scale=0.85]}, thick, color=darkSlate}
+    ]
+        % Top Condition
+        \node[condBox] (cond) {DETECTED RENEWABLE CONDITION};
+
+        % Shortfall Branch (Left)
+        \node[shortBox, below left=0.6cm and 0.2cm of cond] (shortHeader) {\textbf{SHORTFALL CONDITION}\\(Generation $<$ Demand)};
+        \node[branchBox, below=of shortHeader] (s1) {\textbf{1. Storage Discharge}\\Dispatch co-located battery to bridge deficit};
+        \node[branchBox, below=of s1] (s2) {\textbf{2. Energy Import}\\Procure grid/intertie power within line limits};
+        \node[branchBox, below=of s2] (s3) {\textbf{3. Backup Activation}\\Commit standby thermal/hydro generation};
+
+        \draw[arrow] (cond.south) -| (shortHeader.north);
+        \draw[arrow] (shortHeader) -- (s1);
+        \draw[arrow] (s1) -- (s2);
+        \draw[arrow] (s2) -- (s3);
+
+        % Surplus Branch (Right)
+        \node[surpBox, below right=0.6cm and 0.2cm of cond] (surpHeader) {\textbf{SURPLUS CONDITION}\\(Generation $>$ Demand)};
+        \node[branchBox, below=of surpHeader] (o1) {\textbf{1. Storage Charging}\\Absorb excess generation into BESS};
+        \node[branchBox, below=of o1] (o2) {\textbf{2. Energy Export}\\Route surplus to adjacent grid regions};
+        \node[branchBox, below=of o2] (o3) {\textbf{3. Managed Curtailment}\\Ramp down inverters/turbines if required};
+
+        \draw[arrow] (cond.south) -| (surpHeader.north);
+        \draw[arrow] (surpHeader) -- (o1);
+        \draw[arrow] (o1) -- (o2);
+        \draw[arrow] (o2) -- (o3);
+    \end{tikzpicture}
+    \caption{Candidate operational response pathways for renewable shortfall and surplus conditions (advisory options).}
+    \label{fig:surplus_vs_shortfall}
+\end{figure}
+
+Crucially, GridSense AI does not assume all assets are perpetually available; recommendations dynamically adapt to the physical presence, current state, and operational constraints of each site.
+
+\subsection{What-If Simulation}
+\label{subsec:what_if_simulation}
+
+A core differentiator of GridSense AI is its interactive **scenario simulation sandbox**. Rather than forcing operators to accept static recommendations, the platform allows operators to simulate operational stress cases and evaluate alternative futures:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Atmospheric Perturbations:} \emph{``What if cloud cover increases by 30\% across the afternoon peak?''}
+    \item \textbf{Wind Gradient Shifts:} \emph{``What if wind speeds drop below cut-in thresholds 2 hours earlier than forecast?''}
+    \item \textbf{Demand Spikes:} \emph{``What if regional load exceeds scheduled baselines by 15~MW?''}
+    \item \textbf{Storage Degradation / State Limitations:} \emph{``What if the battery system initial SOC is only 40\% instead of 80\%?''}
+    \item \textbf{Asset Outages:} \emph{``What if standby thermal backup unit 2 is offline for unscheduled maintenance?''}
+\end{itemize}
+
+Upon adjusting scenario parameters, the engine recalculates the forecast trajectory, updates the risk matrix, and presents revised dispatch options in real time. This capability transforms GridSense AI from a passive monitoring screen into an active contingency planning sandbox.
+
+\subsection{Action Evaluation}
+\label{subsec:action_evaluation}
+
+When multiple operational interventions are physically feasible, GridSense AI evaluates candidate actions across a multi-criteria decision framework:
+\begin{enumerate}[leftmargin=1.8em, itemsep=0.25em]
+    \item \textbf{Technical Feasibility \& Grid Adequacy:} Ability of the action to fully resolve the projected surplus or deficit without violating inverter limits, line ratings, or battery C-rates.
+    \item \textbf{Renewable Energy Utilization:} Maximizing clean energy absorption and minimizing avoidable curtailment.
+    \item \textbf{Operational Cost Impact:} Minimizing operating expenditures, including fuel costs of thermal backup, battery cycling degradation, and grid import tariffs.
+    \item \textbf{Carbon Footprint:} Comparing the marginal carbon intensity of candidate dispatch sequences (e.g., battery discharge vs. fossil peaker activation).
+    \item \textbf{System Reliability Margins:} Preserving adequate reserve capacity to absorb subsequent forecast volatility.
+\end{enumerate}
+
+This holistic evaluation ensures that recommendations reflect realistic operational, economic, and environmental trade-offs.
+
+\subsection{Explainable Recommendation}
+\label{subsec:explainable_recommendations}
+
+To ensure full transparency in the control room, every recommendation generated by GridSense AI is structured according to a tripartite explainability standard:
+\begin{center}
+    \textbf{\color{primaryNavy}Recommended Action \quad + \quad Underlying Reason \quad + \quad Expected Operational Impact}
+\end{center}
+
+\noindent\textbf{Illustrative Control-Room Recommendation:}
+\begin{quote}
+    \small
+    \textbf{Recommended Action:} Dispatch BESS at 18~MW from 17:30 to 19:30; maintain backup thermal generator on standby.\\
+    \textbf{Operational Reason:} Solar generation is projected to drop below net demand starting at 17:30. Current BESS State of Charge (76\%) is sufficient to supply the projected 18~MW shortfall for 2 hours.\\
+    \textbf{Expected Impact:} Eliminates the requirement to fire the fossil-fuel backup peaker plant, reducing fuel operating costs and avoiding peaker carbon emissions while maintaining frequency stability.
+\end{quote}
+
+By providing explicit justifications, GridSense AI eliminates ``black-box'' hesitation, allowing operators to verify and act with confidence.
+
+\subsection{Decision Loop}
+\label{subsec:decision_loop}
+
+The closed-loop decision workflow proceeds through eight synchronized phases:
+\begin{center}
+    \texttt{Forecast} $\longrightarrow$ \texttt{Detect Risk} $\longrightarrow$ \texttt{Generate Actions} $\longrightarrow$ \texttt{Simulate Scenarios} $\longrightarrow$ \texttt{Evaluate Constraints} $\longrightarrow$ \texttt{Compare Actions} $\longrightarrow$ \texttt{Recommend} $\longrightarrow$ \textbf{\color{accentAmber}Operator Decision}
+\end{center}
+
+The human operator retains ultimate authority and supervisory responsibility for approving and dispatching actions through utility supervisory control and data acquisition (SCADA) systems.
+
+\subsection{Phase 5 Conclusion}
+\label{subsec:phase5_conclusion}
+
+The Decision \& Optimization Engine forms the cognitive bridge between raw renewable forecasting and real-world grid operations.
+
+By uniting proactive risk detection, what-if scenario simulations, multi-criteria action evaluations, and explainable recommendations, GridSense AI ensures that control-room operators are equipped not only to anticipate weather variability, but to execute coordinated, cost-effective, and low-carbon dispatch decisions.

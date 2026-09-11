@@ -1,0 +1,187 @@
+\section{System Architecture \& Data Flow}
+\label{sec:system_architecture}
+
+\subsection{Architecture Overview}
+\label{subsec:architecture_overview}
+
+GridSense AI is structured around a modular, multi-tier architecture designed to decouple data ingestion, machine learning forecasting, risk intelligence, mathematical optimization, and operator interaction. 
+
+Rather than deploying a monolithic prediction service, the system isolates each analytical stage into dedicated computational engines connected through a shared data access layer. \Cref{fig:system_architecture} illustrates the high-level system architecture.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.42cm and 0.4cm,
+        layerBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=accentTeal!10, text width=8.8cm, align=center, font=\footnotesize, inner sep=4pt},
+        dataBox/.style={rectangle, rounded corners=3pt, draw=accentBlue!80, fill=accentBlue!10, text width=2.65cm, align=center, font=\scriptsize, inner sep=3.5pt},
+        dbBox/.style={rectangle, rounded corners=3pt, draw=primaryNavy!80, fill=boxBg, text width=2.2cm, align=center, font=\scriptsize, inner sep=4pt},
+        dashBox/.style={rectangle, rounded corners=3pt, draw=accentAmber!80, fill=accentAmber!10, text width=8.8cm, align=center, font=\footnotesize, inner sep=4.5pt},
+        arrow/.style={-{Stealth[scale=0.85]}, thick, color=darkSlate},
+        darrow/.style={{Stealth[scale=0.85]}-{Stealth[scale=0.85]}, dashed, thick, color=primaryNavy}
+    ]
+        % Top Inputs
+        \node[dataBox] (src1) {\textbf{Weather Data}\\Irradiance, Wind, Temp, Cloud Cover};
+        \node[dataBox, right=0.35cm of src1] (src2) {\textbf{Historical Records}\\Solar/Wind Generation Time Series};
+        \node[dataBox, right=0.35cm of src2] (src3) {\textbf{Site Parameters}\\Installed Capacity, Coordinates, Inverter Spec};
+
+        % Ingestion Layer
+        \node[layerBox, below=0.55cm of src2] (ingest) {\textbf{Data Ingestion \& Validation Layer}\\Format Checking \textbar{} Missing Value Imputation \textbar{} Timestamp Alignment};
+
+        % Forecasting Layer
+        \node[layerBox, below=of ingest] (forecast) {\textbf{Forecasting Engine}\\Multi-Horizon Generation Prediction (24h, 48h, 72h)};
+
+        % Uncertainty & Risk Layer
+        \node[layerBox, below=of forecast] (risk) {\textbf{Uncertainty \& Risk Engine}\\Quantile Intervals ($p_{10}, p_{50}, p_{90}$) \textbar{} Surplus/Shortfall Identification};
+
+        % Simulation & Optimization Layer
+        \node[layerBox, below=of risk] (optim) {\textbf{Simulation \& Decision Optimization Engine}\\What-If Scenario Stress Testing \textbar{} Storage Dispatch \& Curtailment Optimization};
+
+        % Recommendation Layer
+        \node[layerBox, below=of optim] (recom) {\textbf{Recommendation Layer \& Explainable Copilot}\\Actionable Operational Schedules \textbar{} Cost \& Carbon Contextualization};
+
+        % Operator Dashboard
+        \node[dashBox, below=of recom] (dash) {\textbf{Operator Dashboard \& Interaction Layer}\\Multi-Horizon Visualizations \textbar{} Risk Timeline \textbar{} Human Decision Approval};
+
+        % Central Data Store (Right Side)
+        \node[dbBox, right=0.5cm of risk] (db) {\textbf{Central Data\\\& State Store}\\[0.2em]\tiny Raw Logs\\Historical Store\\Forecast Cache\\Scenario State};
+
+        % Arrows
+        \draw[arrow] (src1) -- (src1 |- ingest.north);
+        \draw[arrow] (src2) -- (ingest.north);
+        \draw[arrow] (src3) -- (src3 |- ingest.north);
+
+        \draw[arrow] (ingest) -- (forecast);
+        \draw[arrow] (forecast) -- (risk);
+        \draw[arrow] (risk) -- (optim);
+        \draw[arrow] (optim) -- (recom);
+        \draw[arrow] (recom) -- (dash);
+
+        % DB interactions
+        \draw[darrow] (ingest.east) -| (db.north);
+        \draw[darrow] (forecast.east) -- (db.west |- forecast.east);
+        \draw[darrow] (risk.east) -- (db.west);
+        \draw[darrow] (optim.east) -- (db.west |- optim.east);
+        \draw[darrow] (recom.east) -| (db.south);
+    \end{tikzpicture}
+    \caption{GridSense AI Layered System Architecture and Central Data Interaction.}
+    \label{fig:system_architecture}
+\end{figure}
+
+The architecture guarantees that raw data transformations, predictive modeling, operational risk scoring, and optimization routines remain independently testable, modular, and maintainable.
+
+\subsection{Data Sources}
+\label{subsec:data_sources}
+
+The platform ingests three primary data categories explicitly specified in the HackOut'26 problem statement:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.25em]
+    \item \textbf{Weather Data:} High-resolution numerical weather predictions and environmental feeds, including global horizontal irradiance (GHI), direct normal irradiance (DNI), ambient temperature, cloud cover percentages, wind speed at hub height, and barometric pressure.
+    \item \textbf{Historical Generation Data:} Timestamped time-series records of past solar irradiance power output and wind turbine power generation, capturing diurnal patterns, seasonal baselines, and historical ramps.
+    \item \textbf{Site-Level Parameters:} Metadata defining the physical installation, including nominal installed capacity (MW), geographic coordinates, solar panel tilt and azimuth, wind turbine hub heights, power curves, and inverter efficiency ratings.
+\end{itemize}
+
+In addition to these mandatory inputs, GridSense AI accommodates \textbf{operational parameters} (such as battery energy storage capacity, current state of charge, grid interconnection limits, and standby backup generator ramp rates) as supplementary inputs to the decision optimization layer.
+
+\subsection{Data Ingestion \& Validation}
+\label{subsec:data_ingestion}
+
+Incoming data streams are ingested through automated validation pipelines before being passed to downstream analytical models. The ingestion layer executes four critical operations:
+\begin{enumerate}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Schema and Format Validation:} Verifying data structures, variable names, and expected data types.
+    \item \textbf{Missing-Value Imputation:} Detecting telemetry drops, sensor dropouts, or communication interruptions and applying localized time-series interpolations.
+    \item \textbf{Timestamp Alignment \& Resampling:} Synchronizing disparate weather forecasts and power telemetry into uniform hourly intervals across UTC and local grid time.
+    \item \textbf{Unit and Boundary Consistency:} Normalizing units (e.g., converting $\text{W/m}^2$, $\text{m/s}$, and $\text{kW}$ to standardized $\text{MW}$ indices) and flagging non-physical outliers (such as negative solar irradiance at night).
+\end{enumerate}
+
+Isolating validation at ingestion ensures downstream forecasting models receive clean, synchronized, and physically consistent feature matrices.
+
+\subsection{Forecasting Layer}
+\label{subsec:forecasting_layer}
+
+The forecasting layer combines validated weather features, historical generation baselines, and temporal characteristics (hour of day, day of year) to project renewable power generation across 24-hour, 48-hour, and 72-hour planning horizons.
+
+Importantly, the engine does not produce solitary point estimates in isolation. It computes probabilistic prediction intervals ($p_{10}$, $p_{50}$, $p_{90}$) alongside point forecasts, quantifying the statistical envelope of potential generation outcomes:
+\begin{align*}
+    \text{Expected Generation } (p_{50}) &= 80\text{ MW} \\
+    \text{Prediction Interval } [p_{10}, p_{90}] &= [72\text{ MW}, 88\text{ MW}] \\
+    \text{Assessed Uncertainty Level} &= \text{Moderate}
+\end{align*}
+
+These uncertainty bands form the empirical foundation for downstream risk detection.
+
+\subsection{Intelligence \& Decision Layer}
+\label{subsec:intelligence_decision}
+
+The intelligence and decision layer ingests generation forecasts and uncertainty envelopes to identify potential operational grid events. Key detected conditions include:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Renewable Shortfall Events:} Projected deficit periods where renewable output falls below baseline demand.
+    \item \textbf{Renewable Surplus Events:} Anticipated over-generation periods where clean generation exceeds local absorption capacity.
+    \item \textbf{High-Volatility Ramps:} Time intervals characterized by steep generation deltas or wide prediction intervals.
+    \item \textbf{Curtailment and Storage Windows:} Identification of optimal hours for battery charging versus risk of forced renewable spillage.
+\end{itemize}
+
+Upon event detection, the decision engine executes multi-variable optimization to evaluate candidate operational responses (storage dispatch, power export, backup scheduling, or managed curtailment), balancing operational expense against renewable utilization.
+
+\subsection{User Interaction Layer}
+\label{subsec:user_interaction}
+
+The operator dashboard and AI Copilot deliver a unified, interactive decision-support interface. The user interaction layer presents:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Multi-Horizon Forecast Curves:} Interactive generation timelines with overlaid demand baselines and confidence bounds.
+    \item \textbf{Operational Risk Timeline:} Color-coded alert banners pinpointing upcoming surplus, shortfall, and high-ramp periods.
+    \item \textbf{Recommended Action Cards:} Clear, actionable schedules detailing recommended storage dispatch, backup commitment, and curtailment setpoints.
+    \item \textbf{Explainable AI Copilot:} Natural-language summaries explaining the meteorological drivers, risk factors, and financial/carbon impacts of recommended actions.
+    \item \textbf{What-If Scenario Sandbox:} Interactive controls allowing operators to perturb weather variables or asset availability and inspect updated recommendations in real time.
+\end{itemize}
+
+\subsection{End-to-End Data Flow}
+\label{subsec:end_to_end_flow}
+
+The lifecycle of information through GridSense AI is organized into eight synchronized sequential steps, as illustrated in \cref{fig:data_flow_steps}:
+\begin{enumerate}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Data Collection:} Continuous ingestion of meteorological forecasts, plant telemetry, and site parameters.
+    \item \textbf{Data Validation:} Automated cleansing, outlier removal, timestamp alignment, and normalization.
+    \item \textbf{Forecast Generation:} Multi-horizon generation forecasting across 24h, 48h, and 72h windows.
+    \item \textbf{Uncertainty \& Risk Analysis:} Computation of confidence intervals, risk scoring, and surplus/shortfall detection.
+    \item \textbf{Scenario Simulation:} Dynamic evaluation of operator-defined what-if perturbations and edge cases.
+    \item \textbf{Decision Evaluation:} Multi-objective optimization of storage, backup, import/export, and curtailment actions.
+    \item \textbf{Explainable Recommendation:} Generation of natural-language operational guidance with cost and carbon trade-offs.
+    \item \textbf{Operator Decision Support:} Presentation to qualified control-room operators for human review, verification, and dispatch approval.
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.35cm,
+        stepBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=boxBg, text width=7.4cm, align=left, font=\scriptsize, inner sep=3.5pt},
+        numBox/.style={rectangle, rounded corners=2pt, draw=accentTeal, fill=accentTeal, text=white, font=\scriptsize\bfseries, inner sep=2pt},
+        arrow/.style={-{Stealth[scale=0.8]}, thick, color=darkSlate}
+    ]
+        \node[stepBox] (s1) {\textbf{1. Data Collection} \hfill \color{darkSlate!70}Weather, Historical Generation, Site Parameters};
+        \node[stepBox, below=of s1] (s2) {\textbf{2. Data Validation} \hfill \color{darkSlate!70}Format Check, Imputation, Unit Alignment};
+        \node[stepBox, below=of s2] (s3) {\textbf{3. Forecast Generation} \hfill \color{darkSlate!70}24h, 48h, 72h Multi-Horizon Predictions};
+        \node[stepBox, below=of s3] (s4) {\textbf{4. Uncertainty \& Risk Analysis} \hfill \color{darkSlate!70}Confidence Intervals, Surplus/Deficit Windows};
+        \node[stepBox, below=of s4] (s5) {\textbf{5. Scenario Simulation} \hfill \color{darkSlate!70}What-If Stress Testing, Parameter Adjustments};
+        \node[stepBox, below=of s5] (s6) {\textbf{6. Decision Evaluation} \hfill \color{darkSlate!70}Storage, Backup, Import/Export, Curtailment};
+        \node[stepBox, below=of s6] (s7) {\textbf{7. Action Recommendation} \hfill \color{darkSlate!70}Explainable Guidance, Cost \& Carbon Insights};
+        \node[stepBox, below=of s7, draw=accentAmber!90, fill=accentAmber!10] (s8) {\textbf{8. Operator Decision Support} \hfill \color{darkSlate!70}\textbf{Human Review, Approval \& Dispatch}};
+
+        \draw[arrow] (s1) -- (s2);
+        \draw[arrow] (s2) -- (s3);
+        \draw[arrow] (s3) -- (s4);
+        \draw[arrow] (s4) -- (s5);
+        \draw[arrow] (s5) -- (s6);
+        \draw[arrow] (s6) -- (s7);
+        \draw[arrow] (s7) -- (s8);
+    \end{tikzpicture}
+    \caption{Operational End-to-End Data Flow through the GridSense AI Platform.}
+    \label{fig:data_flow_steps}
+\end{figure}
+
+\subsection{Phase 3 Conclusion}
+\label{subsec:phase3_conclusion}
+
+GridSense AI employs a modular architecture where each component maintains a distinct, well-defined operational responsibility. 
+
+Data ingestion establishes a clean empirical foundation; the forecasting layer generates multi-horizon predictions with quantified uncertainty; the intelligence layer identifies imminent grid imbalances; the optimization engine evaluates multi-criteria dispatch strategies; and the dashboard empowers the operator with explainable, actionable recommendations.
+
+This architectural framework provides the foundation for the detailed AI/ML forecasting pipelines and decision models examined in the subsequent phases.

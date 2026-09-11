@@ -1,0 +1,40 @@
+\section{Problem Statement}
+\label{sec:problem_statement}
+
+\subsection{Renewable Generation Variability}
+\label{subsec:variability}
+
+Solar and wind power outputs fluctuate constantly due to weather conditions, time of day, and seasonal transitions. Solar generation is governed by solar irradiance, transient cloud cover, and ambient temperature, while wind generation scales non-linearly with atmospheric pressure fronts and turbulent wind speeds. Unlike conventional controllable thermal generation, renewable power cannot be dispatched on demand.
+
+This physical intermittency creates severe operational difficulty for grid operators and utility companies: \emph{the power grid must commit dispatch schedules and balance supply and demand in advance, relying on imperfect information about weather-dependent generation that will occur 24 to 72 hours later.}
+
+\subsection{The Imbalance Challenge: Over-Generation and Under-Generation}
+\label{subsec:imbalance_challenge}
+
+Weather fluctuations manifest as two primary operational stress conditions:
+\begin{itemize}[leftmargin=1.5em, itemsep=0.25em]
+    \item \textbf{Under-Generation (Supply Shortfall):} Renewable output falls below scheduled baselines or net demand. Without advance warning, operators must rapidly activate expensive, carbon-intensive fossil peaker plants or resort to emergency load shedding to maintain grid frequency.
+    \item \textbf{Over-Generation (Energy Surplus):} Renewable generation exceeds local demand and transmission hosting capacity. If storage or export channels cannot absorb the excess, operators are forced into renewable curtailment, resulting in the permanent loss of clean, zero-marginal-cost electricity.
+\end{itemize}
+
+\subsection{Why 24--72 Hour Forecasting Matters}
+\label{subsec:why_forecasting}
+
+A forward prediction window of 24 to 72 hours provides the critical lead time required for operational coordination:
+\begin{itemize}[leftmargin=1.5em, itemsep=0.2em]
+    \item \textbf{24-Hour Horizon:} Enables optimal day-ahead battery scheduling, spinning reserve procurement, and intraday dispatch adjustments.
+    \item \textbf{48--72 Hour Horizon:} Supports medium-term thermal unit commitment, maintenance scheduling, and inter-regional energy trade agreements.
+\end{itemize}
+
+\subsection{The HackOut'26 Requirement \& Core Problem}
+\label{subsec:hackout_requirement}
+
+The HackOut'26 problem statement mandates a platform that ingests weather data, historical generation records, and site-level parameters to forecast renewable generation over 24--72 hours, identify periods of expected over-generation and under-generation, and recommend suitable grid actions such as curtailment, storage dispatch, and backup activation.
+
+Conventional forecasting tools stop at providing a single, deterministic number (e.g., \emph{``Tomorrow at 14:00: Expected Output = 80~MW''}), leaving operators without uncertainty bounds, risk context, or actionable operational guidance.
+
+Therefore, the core engineering problem is:
+\begin{quote}
+    \itshape\bfseries\color{primaryNavy}
+    ``How can renewable generation forecasts be transformed into reliable, uncertainty-aware, and actionable decision support for better grid operations?''
+\end{quote}

@@ -1,0 +1,197 @@
+\section{Product, UX \& Implementation}
+\label{sec:product_ux_implementation}
+
+\subsection{Product Overview}
+\label{subsec:product_overview}
+
+GridSense AI is delivered as an interactive, web-based decision-support platform designed to streamline renewable generation monitoring, risk evaluation, and operational planning.
+
+Rather than fragmenting operations across separate forecasting charts and manual spreadsheets, the interface structures control-room tasks into a unified four-stage UX methodology:
+\begin{center}
+    \textbf{\color{primaryNavy}Monitor $\longrightarrow$ Investigate $\longrightarrow$ Simulate $\longrightarrow$ Decide}
+\end{center}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.36cm,
+        stepBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=boxBg, text width=7.6cm, align=left, font=\scriptsize, inner sep=3.5pt},
+        arrow/.style={-{Stealth[scale=0.8]}, thick, color=darkSlate}
+    ]
+        \node[stepBox] (w1) {\textbf{1. Monitor Operations} \hfill \color{darkSlate!70}Live Telemetry, Generation KPIs, Battery SOC};
+        \node[stepBox, below=of w1] (w2) {\textbf{2. Inspect Forecast Curves} \hfill \color{darkSlate!70}24h, 48h, 72h Horizons + Uncertainty Bands};
+        \node[stepBox, below=of w2] (w3) {\textbf{3. Investigate Risk Alerts} \hfill \color{darkSlate!70}Surplus/Shortfall Windows, Volatility Flags};
+        \node[stepBox, below=of w3] (w4) {\textbf{4. Run What-If Scenarios} \hfill \color{darkSlate!70}Perturb Cloud Cover, Wind Speed, Demand, SOC};
+        \node[stepBox, below=of w4] (w5) {\textbf{5. Compare Candidate Actions} \hfill \color{darkSlate!70}Storage Dispatch, Import/Export, Backup Options};
+        \node[stepBox, below=of w5] (w6) {\textbf{6. Review Recommendations} \hfill \color{darkSlate!70}Explainable Rationale, Cost \& Carbon Context};
+        \node[stepBox, below=of w6, draw=accentAmber!90, fill=accentAmber!10] (w7) {\textbf{7. Operator Decision Support} \hfill \color{darkSlate!70}\textbf{Human Approval \& Supervisory Execution}};
+
+        \draw[arrow] (w1) -- (w2);
+        \draw[arrow] (w2) -- (w3);
+        \draw[arrow] (w3) -- (w4);
+        \draw[arrow] (w4) -- (w5);
+        \draw[arrow] (w5) -- (w6);
+        \draw[arrow] (w6) -- (w7);
+    \end{tikzpicture}
+    \caption{GridSense AI Operator UX Workflow from real-time monitoring to supervisory dispatch execution.}
+    \label{fig:ux_workflow}
+\end{figure}
+
+As shown in \cref{fig:ux_workflow}, the interface prioritizes critical situational insights over raw data volume.
+
+\subsection{Operator Dashboard}
+\label{subsec:operator_dashboard}
+
+The main Operator Dashboard serves as the central control room console, consolidating multi-horizon forecasts, asset states, and automated risk scoring into an information-dense yet uncluttered layout (\cref{fig:conceptual_dashboard}).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[xscale=0.92, yscale=0.82]
+        % Dashboard Outer Container
+        \draw[rounded corners=4pt, draw=primaryNavy, fill=white, line width=0.8pt] (0,0) rectangle (12,6.4);
+        
+        % Top Navigation Bar
+        \draw[fill=primaryNavy, draw=none, rounded corners=3pt] (0.05,5.85) rectangle (11.95,6.35);
+        \node[color=white, font=\footnotesize\bfseries, anchor=west] at (0.3,6.1) {GridSense AI \textbar{} Operator Command Console};
+        \node[color=accentTeal!80, font=\tiny, anchor=east] at (11.7,6.1) {System Status: Optimal \textbar{} Horizon: 24h};
+
+        % Top KPI Metric Cards
+        \draw[rounded corners=2pt, draw=borderGray, fill=boxBg] (0.3,4.8) rectangle (3.8,5.7);
+        \node[font=\tiny\bfseries\color{darkSlate!80}, anchor=north west] at (0.4,5.6) {CURRENT GENERATION};
+        \node[font=\small\bfseries\color{primaryNavy}, anchor=north west] at (0.4,5.35) {42.5 MW \scriptsize\color{accentTeal}(+3.2\%)};
+
+        \draw[rounded corners=2pt, draw=borderGray, fill=boxBg] (4.1,4.8) rectangle (7.6,5.7);
+        \node[font=\tiny\bfseries\color{darkSlate!80}, anchor=north west] at (4.2,5.6) {BESS STATE OF CHARGE};
+        \node[font=\small\bfseries\color{primaryNavy}, anchor=north west] at (4.2,5.35) {78\% \scriptsize\color{darkSlate}(Cap: 50 MWh)};
+
+        \draw[rounded corners=2pt, draw=accentRose!80, fill=accentRose!10] (7.9,4.8) rectangle (11.7,5.7);
+        \node[font=\tiny\bfseries\color{accentRose}, anchor=north west] at (8.0,5.6) {IMMINENT RISK ALERT};
+        \node[font=\scriptsize\bfseries\color{accentRose}, anchor=north west] at (8.0,5.3) {Shortfall Event: 17:30--19:30};
+
+        % Left Main Chart: Forecast with Uncertainty Band
+        \draw[rounded corners=2pt, draw=borderGray, fill=white] (0.3,0.3) rectangle (7.6,4.65);
+        \node[font=\tiny\bfseries\color{darkSlate}, anchor=north west] at (0.45,4.5) {RENEWABLE GENERATION FORECAST \& DEMAND (24H)};
+        
+        % Mini Chart Axes
+        \draw[->, thin, color=darkSlate!60] (0.6,0.6) -- (7.3,0.6);
+        \draw[->, thin, color=darkSlate!60] (0.6,0.6) -- (0.6,4.1);
+        \node[font=\tiny, color=darkSlate!60] at (0.9,0.45) {00:00};
+        \node[font=\tiny, color=darkSlate!60] at (3.8,0.45) {12:00};
+        \node[font=\tiny, color=darkSlate!60] at (6.8,0.45) {24:00};
+
+        % Shaded Uncertainty
+        \fill[accentTeal!20] 
+            (1.5,0.6) -- plot [smooth] coordinates {(2.5,0.6) (3.8,3.8) (5.0,2.6) (6.0,0.6)} -- 
+            plot [smooth] coordinates {(6.0,0.6) (5.0,1.2) (3.8,2.8) (2.5,0.6)} -- cycle;
+        
+        % Forecast Line (p50)
+        \draw[thick, color=accentTeal] plot [smooth] coordinates {(1.5,0.6) (2.5,0.6) (3.8,3.3) (5.0,1.9) (6.0,0.6)};
+        % Net Demand Line
+        \draw[dashed, thick, color=darkSlate!70] plot [smooth] coordinates {(0.6,2.0) (2.5,1.7) (3.8,2.7) (5.5,3.6) (7.1,2.4)};
+        
+        % Risk Window Highlight
+        \draw[fill=accentRose!25, draw=accentRose, dashed] (4.8,0.6) rectangle (6.2,3.8);
+        \node[font=\tiny\bfseries\color{accentRose}, align=center] at (5.5,3.2) {Shortfall\\Risk};
+
+        % Right Top: Recommendation Card
+        \draw[rounded corners=2pt, draw=accentTeal, fill=boxBg] (7.9,2.55) rectangle (11.7,4.65);
+        \node[font=\tiny\bfseries\color{accentTeal}, anchor=north west] at (8.0,4.5) {RECOMMENDED OPERATIONAL ACTION};
+        \node[font=\tiny\bfseries\color{darkSlate}, anchor=north west] at (8.0,4.15) {Action: \textnormal{Dispatch BESS @ 18 MW}};
+        \node[font=\tiny\color{darkSlate}, text width=3.4cm, anchor=north west] at (8.0,3.85) {\textbf{Reason:} Shortfall at 17:30. Battery SOC (78\%) sufficient to bridge deficit.};
+        \node[font=\tiny\color{darkSlate}, text width=3.4cm, anchor=north west] at (8.0,3.2) {\textbf{Impact:} Avoids fossil peaker startup; minimizes operating cost.};
+
+        % Right Bottom: What-If Simulator Controls
+        \draw[rounded corners=2pt, draw=borderGray, fill=boxBg] (7.9,0.3) rectangle (11.7,2.4);
+        \node[font=\tiny\bfseries\color{darkSlate}, anchor=north west] at (8.0,2.25) {WHAT-IF SCENARIO SIMULATOR};
+        \node[font=\tiny\color{darkSlate}, anchor=north west] at (8.0,1.9) {Cloud Cover: \textbf{+25\%} \hfill \scriptsize[Slider]};
+        \node[font=\tiny\color{darkSlate}, anchor=north west] at (8.0,1.55) {Battery Initial SOC: \textbf{50\%} \hfill \scriptsize[Slider]};
+        \draw[fill=accentTeal, draw=none, rounded corners=2pt] (8.1,0.55) rectangle (11.5,1.05);
+        \node[font=\tiny\bfseries\color{white}] at (9.8,0.8) {Run Scenario Simulation};
+    \end{tikzpicture}
+    \caption{Conceptual control-room dashboard interface wireframe for GridSense AI (illustrative mock-up).}
+    \label{fig:conceptual_dashboard}
+\end{figure}
+
+The dashboard structure surfaces three core visual quadrants:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{KPI Overview Strip:} Instantaneous generation telemetry, storage state, and high-priority alert flags.
+    \item \textbf{Multi-Horizon Forecast Pane:} Interactive generation trajectories overlaid against scheduled demand baselines with uncertainty bands and deficit/surplus callouts.
+    \item \textbf{Advisory Action \& Simulation Console:} Actionable recommendation cards and scenario stress-testing controls.
+\end{itemize}
+
+\subsection{Forecast View}
+\label{subsec:forecast_view}
+
+The dedicated Forecast View enables operators to drill into generation trajectories across 24-hour, 48-hour, and 72-hour intervals. Operators can toggle individual meteorological layers (irradiance curves, cloud cover index, ambient temperature, and wind gradients) to inspect physical factors driving future generation ramps and uncertainty bands.
+
+\subsection{Scenario Simulator}
+\label{subsec:scenario_simulator}
+
+The Scenario Simulator provides an interactive sandbox environment where operators can modify operating assumptions and observe potential outcomes before committing supervisory commands:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Meteorological Shifts:} Adjusting cloud cover (+10\% to +50\%) or wind cut-out margins.
+    \item \textbf{Demand Perturbations:} Simulating peak load increases or industrial demand surges.
+    \item \textbf{Asset Availability:} Testing reduced battery capacity or thermal generator outages.
+\end{itemize}
+Upon execution, the engine updates forecast trajectories, recalculates risk scores, and dynamically regenerates candidate dispatch strategies.
+
+\subsection{Recommendation Panel}
+\label{subsec:recommendation_panel}
+
+To guarantee transparent decision-support, recommendations are formatted according to an explainable standard:
+\begin{center}
+    \fbox{\parbox{0.9\textwidth}{\small
+        \textbf{\color{primaryNavy}RECOMMENDED ACTION:} Dispatch BESS at 18~MW (17:30--19:30).\\
+        \textbf{\color{primaryNavy}OPERATIONAL REASON:} Projected generation falls 18~MW below scheduled demand; battery SOC (78\%) is sufficient to cover the shortfall.\\
+        \textbf{\color{primaryNavy}EXPECTED IMPACT:} Prevents thermal peaker activation, reducing fuel costs and emissions.
+    }}
+\end{center}
+The interface clearly indicates that recommendations represent advisory guidance requiring operator review and approval.
+
+\subsection{Technology Stack}
+\label{subsec:technology_stack}
+
+GridSense AI is architected using modern, lightweight, and extensible web and data science technologies (\cref{tab:tech_stack}).
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.2}
+    \caption{Proposed Hackathon Prototype Technology Stack.}
+    \label{tab:tech_stack}
+    \begin{tabularx}{\textwidth}{L{2.8cm} L{3.5cm} Y}
+        \toprule
+        \textbf{Layer} & \textbf{Selected Technology} & \textbf{Operational Function} \\
+        \midrule
+        \textbf{Frontend} & React + Tailwind CSS & Responsive, component-driven UI for real-time monitoring. \\
+        \textbf{Visualization} & Recharts / D3.js & High-performance time-series charts and uncertainty bands. \\
+        \textbf{Backend API} & Python + FastAPI & Asynchronous REST API serving forecasts and scenario runs. \\
+        \textbf{AI/ML Engine} & Python + XGBoost & Fast tabular multi-step regression and quantile inference. \\
+        \textbf{Optimization} & Python Optimization Logic & Rule-based and multi-objective dispatch evaluation. \\
+        \textbf{Data Store} & PostgreSQL / JSON Cache & Structured storage for telemetry, weather, and scenario states. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Implementation Strategy}
+\label{subsec:implementation_strategy}
+
+For the hackathon development cycle, the engineering priority is delivering an end-to-end, functional decision intelligence loop rather than building isolated, disconnected features.
+
+The **Minimum Viable Demonstration (MVP)** scope consists of:
+\begin{enumerate}[leftmargin=1.8em, itemsep=0.2em]
+    \item Loading multi-modal weather, historical generation, and site parameter records.
+    \item Executing multi-step 24--72 hour generation forecasting.
+    \item Computing and visualizing forecast uncertainty intervals.
+    \item Automatically flagging upcoming surplus and shortfall risk windows.
+    \item Running interactive what-if scenario simulations.
+    \item Producing structured, explainable action recommendations.
+    \item Presenting the integrated workflow via the web dashboard.
+\end{enumerate}
+
+\subsection{Phase 6 Conclusion}
+\label{subsec:phase6_conclusion}
+
+The GridSense AI product turns complex probabilistic forecasting into a clear, actionable operator workflow. 
+
+By unifying monitoring, multi-horizon forecasts, risk detection, what-if simulations, and explainable recommendations into an intuitive dashboard, the platform provides practical decision support while maintaining the operator as the ultimate decision-maker.

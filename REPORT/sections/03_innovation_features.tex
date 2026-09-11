@@ -1,0 +1,64 @@
+\section{Innovation \& Key Features}
+\label{sec:innovation_features}
+
+\subsection{Core Differentiation: Beyond Conventional Forecasting}
+\label{subsec:core_differentiation}
+
+Conventional energy dashboards operate on a passive, open-loop paradigm that ends once a generation number is visualized. GridSense AI introduces a fundamental paradigm shift: \textbf{transitioning from a passive forecasting dashboard into an active decision intelligence system} (\cref{fig:conventional_vs_gridsense}).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.32cm,
+        convBox/.style={rectangle, rounded corners=3pt, draw=accentBlue!70, fill=accentBlue!10, text width=4.5cm, align=center, font=\scriptsize, inner sep=3pt},
+        gsBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=accentTeal!10, text width=4.5cm, align=center, font=\scriptsize, inner sep=3pt},
+        arrow/.style={-{Stealth[scale=0.75]}, thick, color=darkSlate}
+    ]
+        % Left side: Conventional
+        \node[font=\scriptsize\bfseries\color{accentBlue}] (cTitle) {CONVENTIONAL SYSTEM};
+        \node[convBox, below=0.2cm of cTitle] (c1) {Weather + Historical Records};
+        \node[convBox, below=of c1] (c2) {Forecasting Model (Point Estimate)};
+        \node[convBox, below=of c2] (c3) {Passive Dashboard Metric};
+
+        \draw[arrow] (c1) -- (c2);
+        \draw[arrow] (c2) -- (c3);
+
+        % Divider
+        \draw[dashed, color=borderGray, line width=0.7pt] (2.6, 0.3) -- (2.6, -3.8);
+
+        % Right side: GridSense AI
+        \node[font=\scriptsize\bfseries\color{accentTeal}, right=3.0cm of cTitle] (gTitle) {GRIDSENSE AI PLATFORM};
+        \node[gsBox, below=0.2cm of gTitle] (g1) {Weather + Historical + Site Parameters};
+        \node[gsBox, below=of g1] (g2) {Forecasting Engine (24--72h)};
+        \node[gsBox, below=of g2] (g3) {Uncertainty \& Risk Quantification};
+        \node[gsBox, below=of g3] (g4) {What-If Scenario Simulation};
+        \node[gsBox, below=of g4] (g5) {Decision Optimization Engine};
+        \node[gsBox, below=of g5] (g6) {Explainable Action Recommendations};
+
+        \draw[arrow] (g1) -- (g2);
+        \draw[arrow] (g2) -- (g3);
+        \draw[arrow] (g3) -- (g4);
+        \draw[arrow] (g4) -- (g5);
+        \draw[arrow] (g5) -- (g6);
+    \end{tikzpicture}
+    \caption{Architectural comparison: Conventional single-point forecasting versus the GridSense AI decision intelligence framework.}
+    \label{fig:conventional_vs_gridsense}
+\end{figure}
+
+\subsection{Key Innovative Capabilities}
+\label{subsec:innovative_capabilities}
+
+GridSense AI combines six innovative capabilities into a unified operational workflow:
+\begin{itemize}[leftmargin=1.5em, itemsep=0.35em]
+    \item \textbf{Forecast + Uncertainty Quantification:} Rather than presenting a single deterministic curve, GridSense AI models prediction intervals ($p_{10}, p_{50}, p_{90}$), allowing operators to differentiate between stable weather regimes and volatile transitions.
+    \item \textbf{Automated Risk \& Imbalance Detection:} The platform continuously scans forward horizons to flag supply shortfalls, surplus generation, and steep ramp rates before they compromise grid stability.
+    \item \textbf{Interactive What-If Scenario Sandbox:} Operators can adjust atmospheric variables (e.g., +30\% cloud cover) or system constraints (e.g., lower battery SOC) to simulate grid sensitivity in real time.
+    \item \textbf{Multi-Objective Action Optimization:} Evaluates candidate actions (battery charging/discharging, grid import/export, backup activation, curtailment) balancing cost, renewable wastage, and reliability.
+    \item \textbf{Explainable AI Copilot:} Provides clear, natural-language justifications for every recommended action, explaining the meteorological drivers, risk factors, and expected operational impact.
+    \item \textbf{Cost and Carbon Intelligence:} Incorporates fuel costs of thermal backup, battery cycling degradation, and marginal carbon emissions into candidate dispatch evaluation.
+\end{itemize}
+
+This multi-layer intelligence realizes the central operating philosophy:
+\begin{center}
+    \textbf{\color{primaryNavy}FORECAST $\longrightarrow$ UNDERSTAND $\longrightarrow$ SIMULATE $\longrightarrow$ OPTIMIZE $\longrightarrow$ ACT}
+\end{center}

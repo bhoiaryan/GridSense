@@ -1,0 +1,173 @@
+\section{AI/ML \& Forecasting Intelligence}
+\label{sec:ai_ml_forecasting}
+
+\subsection{Forecasting Objective}
+\label{subsec:forecasting_objective}
+
+The forecasting engine serves as the predictive foundation of GridSense AI, generating multi-step renewable power generation forecasts over 24-hour, 48-hour, and 72-hour planning horizons.
+
+For each hourly time step $t \in \{1, 2, \dots, H\}$ across the horizon $H$, the engine estimates expected power generation $\hat{y}_t$ using:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Historical generation patterns} capturing diurnal cycles, seasonal baselines, and auto-regressive momentum.
+    \item \textbf{Meteorological forecast parameters} representing environmental drivers of solar irradiance and wind dynamics.
+    \item \textbf{Site-level parameters} specifying installed physical capacity and conversion characteristics.
+\end{itemize}
+
+Rather than treating forecasting as an isolated mathematical regression task, the objective is to produce structured forecast trajectories and uncertainty envelopes that directly inform control-room dispatch decisions.
+
+\subsection{Forecasting Approach}
+\label{subsec:forecasting_approach}
+
+For the hackathon prototype, GridSense AI adopts a machine learning framework based on gradient-boosted decision trees using \textbf{XGBoost} (eXtreme Gradient Boosting). XGBoost is well-suited for tabular renewable time-series data due to its computational efficiency, robust handling of non-linear feature interactions, and strong performance without requiring massive training clusters. Alternative sequence models (such as LSTM networks or Facebook Prophet) represent natural extensions for future comparative benchmarking.
+
+The model learns complex non-linear mappings between renewable power output and multi-modal feature representations (\cref{tab:feature_engineering}).
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.2}
+    \caption{Feature Engineering Categories and Operational Purpose.}
+    \label{tab:feature_engineering}
+    \begin{tabularx}{\textwidth}{L{2.8cm} Y Y}
+        \toprule
+        \textbf{Input Category} & \textbf{Engineered Feature Set} & \textbf{Operational Purpose} \\
+        \midrule
+        \textbf{Weather Features} & Global Horizontal Irradiance (GHI), DNI, Cloud Cover \%, Temperature, Wind Speed ($v_{\text{hub}}$), Air Density & Quantify environmental energy flux and atmospheric attenuation. \\
+        \textbf{Historical Features} & Lagged Generation ($y_{t-1}, y_{t-24}, y_{t-48}$), Rolling Means/Std, Hour of Day, Day of Year & Capture diurnal generation baselines, autocorrelation, and seasonality. \\
+        \textbf{Site Features} & Nameplate Capacity ($P_{\text{rated}}$), Panel Tilt/Azimuth, Hub Height, Inverter Power Limits & Normalize generation curves against physical plant constraints. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Forecast + Uncertainty}
+\label{subsec:forecast_uncertainty}
+
+A central premise of GridSense AI is that a deterministic point forecast is insufficient for reliable grid dispatch. In real-world power systems, identical point predictions can carry drastically different operating risks depending on meteorological stability.
+
+Instead of reporting a solitary point value, GridSense AI generates an \textbf{uncertainty envelope}:
+\begin{center}
+    \texttt{Expected Generation } $= 80\text{ MW} \quad \big\vert \quad \texttt{Prediction Range } [p_{10}, p_{90}] = [72\text{ MW}, 88\text{ MW}] \quad \big\vert \quad \texttt{Confidence } = \text{Moderate}$
+\end{center}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[xscale=0.82, yscale=0.68]
+        % Background grid
+        \draw[very thin, color=borderGray!50, step=1cm] (0,0) grid (12,5);
+        \draw[->, thick, color=darkSlate] (0,0) -- (12.3,0) node[right] {\footnotesize Horizon (Hours)};
+        \draw[->, thick, color=darkSlate] (0,0) -- (0,5.3) node[above] {\footnotesize Generation (MW)};
+        
+        % Ticks
+        \foreach \x/\label in {0/00:00, 3/06:00, 6/12:00, 9/18:00, 12/24:00}
+            \draw (\x,0.1) -- (\x,-0.1) node[below] {\scriptsize \label};
+        \foreach \y/\label in {1/20, 2/40, 3/60, 4/80, 5/100}
+            \draw (0.1,\y) -- (-0.1,\y) node[left] {\scriptsize \label};
+
+        % Shaded Uncertainty Envelope (p10 to p90 band)
+        \fill[accentTeal!18] 
+            (0,0) -- 
+            plot [smooth] coordinates {(2.5,0) (4,1.8) (6,4.8) (7.5,3.6) (9,1.6) (10,0)} --
+            plot [smooth] coordinates {(10,0) (9,0.4) (7.5,1.8) (6,3.6) (4,0.6) (2.5,0)} -- cycle;
+
+        % Net Demand Curve
+        \draw[dashed, thick, color=darkSlate!70] plot [smooth] coordinates {(0,2.2) (3,1.8) (6,3.2) (9,4.5) (12,2.8)};
+        \node[color=darkSlate!80, font=\scriptsize] at (10.4,4.7) {Scheduled Demand};
+
+        % Expected Forecast Line (p50)
+        \draw[line width=1.3pt, color=accentTeal] plot [smooth] coordinates {(0,0) (2.5,0) (4,1.2) (6,4.2) (7.5,2.7) (9,0.9) (10,0)};
+        \node[color=accentTeal, font=\scriptsize\bfseries] at (6,4.5) {Expected Forecast ($p_{50}$)};
+
+        % Highlighted Risk / Deficit Zone (Evening Peak)
+        \draw[fill=accentRose!20, draw=accentRose, dashed, line width=0.8pt] (7.5,0.2) rectangle (9.8,4.6);
+        \node[color=accentRose, font=\scriptsize\bfseries, align=center] at (8.65,2.5) {High Shortfall\\Risk Window};
+    \end{tikzpicture}
+    \caption{Conceptual 24-hour generation forecast with probabilistic prediction intervals ($p_{10}$--$p_{90}$) and highlighted shortfall risk window (illustrative).}
+    \label{fig:forecast_uncertainty_chart}
+\end{figure}
+
+As shown in \cref{fig:forecast_uncertainty_chart}, the uncertainty envelope allows the decision layer to differentiate between stable meteorological regimes (tight prediction bands) and volatile atmospheric transitions (broad prediction intervals).
+
+\subsection{Forecast Risk}
+\label{subsec:forecast_risk}
+
+Forecast uncertainty becomes operationally critical when potential deviations threaten grid balance. GridSense AI evaluates each planning interval using structured risk indicators:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Expected Output Magnitude:} Anticipated generation relative to nominal capacity.
+    \item \textbf{Dispersion / Volatility Index:} Width of the prediction interval ($p_{90} - p_{10}$), indicating meteorological uncertainty.
+    \item \textbf{Surplus Imbalance Risk:} Probability of generation exceeding local hosting and export capacity ($P_{\text{gen}} > P_{\text{demand}} + P_{\text{export}}$).
+    \item \textbf{Shortfall Imbalance Risk:} Probability of generation falling below critical commitment thresholds ($P_{\text{gen}} < P_{\text{demand}} - P_{\text{storage}}$).
+    \item \textbf{Resource Adequacy Factor:} Comparison of potential shortfalls against online storage and flexible backup capacity.
+\end{itemize}
+
+Under this framework, a time window with moderate generation but severe forecast dispersion is flagged with higher operational priority than a calm, highly predictable low-generation window.
+
+\subsection{Explainable Forecasts}
+\label{subsec:explainable_forecasts}
+
+To build operator trust and facilitate rapid situational awareness, the system translates feature dynamics and model outputs into clear, natural-language explanations:
+\begin{center}
+    \emph{``Solar generation is forecast to drop 42\% between 14:00 and 16:00 due to an incoming cloud front increasing cloud cover to 78\%. Shortfall risk is moderate; local battery storage is sufficient to bridge the gap.''}
+\end{center}
+
+This explainability layer connects raw predictive mechanics to operational reality without burdening control-room operators with model internal parameters.
+
+\subsection{Model Evaluation}
+\label{subsec:model_evaluation}
+
+Rigorous offline validation is essential before deploying predictive models for decision support. GridSense AI structures model evaluation using standard time-series regression metrics:
+\begin{itemize}[leftmargin=1.8em, itemsep=0.2em]
+    \item \textbf{Mean Absolute Error (MAE):} Measures average absolute prediction error in megawatts:
+    \begin{equation}
+        \text{MAE} = \frac{1}{N} \sum_{i=1}^N |y_i - \hat{y}_i|
+    \end{equation}
+    \item \textbf{Root Mean Squared Error (RMSE):} Penalizes large, abrupt deviations heavily, reflecting operational costs associated with large unpredicted ramps:
+    \begin{equation}
+        \text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^N (y_i - \hat{y}_i)^2}
+    \end{equation}
+    \item \textbf{Mean Absolute Percentage Error (MAPE):} Evaluates normalized percentage error across non-zero daylight/generation periods:
+    \begin{equation}
+        \text{MAPE} = \frac{100\%}{N} \sum_{i=1}^N \left| \frac{y_i - \hat{y}_i}{y_i} \right| \quad (\text{for } y_i > \epsilon)
+    \end{equation}
+\end{itemize}
+
+To prevent \textbf{data leakage}, model evaluation employs strict expanding-window or sliding-window time-aware cross-validation, guaranteeing that future meteorological data never informs past training instances. Concrete numerical benchmark results will be reported upon completion of model training.
+
+\subsection{Forecasting Pipeline}
+\label{subsec:forecasting_pipeline}
+
+\Cref{fig:forecasting_pipeline} illustrates the structured, step-by-step pipeline connecting raw environmental feeds to operational risk indicators.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.38cm,
+        pipeBox/.style={rectangle, rounded corners=3pt, draw=accentTeal!80, fill=boxBg, text width=7.6cm, align=left, font=\scriptsize, inner sep=3.5pt},
+        arrow/.style={-{Stealth[scale=0.8]}, thick, color=darkSlate}
+    ]
+        \node[pipeBox] (p1) {\textbf{1. Multi-Modal Ingestion} \hfill \color{darkSlate!70}Historical Output, Weather, Site Params};
+        \node[pipeBox, below=of p1] (p2) {\textbf{2. Data Preparation} \hfill \color{darkSlate!70}Imputation, Resampling, Outlier Removal};
+        \node[pipeBox, below=of p2] (p3) {\textbf{3. Feature Engineering} \hfill \color{darkSlate!70}Lags, Rolling Stats, Solar Geometry, Ramps};
+        \node[pipeBox, below=of p3] (p4) {\textbf{4. XGBoost Model Execution} \hfill \color{darkSlate!70}Multi-Step 24h--72h Horizon Regression};
+        \node[pipeBox, below=of p4] (p5) {\textbf{5. Generation Forecast Output} \hfill \color{darkSlate!70}Hourly Point Trajectory ($\hat{y}_{t}$)};
+        \node[pipeBox, below=of p5] (p6) {\textbf{6. Uncertainty Estimation} \hfill \color{darkSlate!70}Prediction Bands ($p_{10}, p_{50}, p_{90}$), Confidence};
+        \node[pipeBox, below=of p6] (p7) {\textbf{7. Operational Risk Indicators} \hfill \color{darkSlate!70}Surplus/Shortfall Flags, Volatility Score};
+        \node[pipeBox, below=of p7, draw=accentTeal, fill=accentTeal!15] (p8) {\textbf{8. Decision \& Optimization Engine} \hfill \color{darkSlate!70}\textbf{Storage Dispatch \& Grid Action}};
+
+        \draw[arrow] (p1) -- (p2);
+        \draw[arrow] (p2) -- (p3);
+        \draw[arrow] (p3) -- (p4);
+        \draw[arrow] (p4) -- (p5);
+        \draw[arrow] (p5) -- (p6);
+        \draw[arrow] (p6) -- (p7);
+        \draw[arrow] (p7) -- (p8);
+    \end{tikzpicture}
+    \caption{Forecasting Intelligence Pipeline from multi-modal ingestion to the decision engine.}
+    \label{fig:forecasting_pipeline}
+\end{figure}
+
+\subsection{Phase 4 Conclusion}
+\label{subsec:phase4_conclusion}
+
+The AI/ML layer establishes the predictive foundation of GridSense AI. 
+
+Its primary innovation lies not simply in generating numerical time series, but in delivering forecasts coupled with uncertainty intervals, operational risk metrics, and natural-language explanations. This enables the downstream Decision and Optimization Engine (detailed in Phase 5) to balance risk and prescribe cost- and carbon-optimized grid interventions.

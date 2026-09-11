@@ -1,0 +1,37 @@
+\section{Feasibility, Impact \& Future Scope}
+\label{sec:feasibility_impact}
+
+\subsection{Technical Feasibility \& Prototype Pragmatism}
+\label{subsec:feasibility}
+
+GridSense AI is highly practical for rapid hackathon prototyping and real-world deployment:
+\begin{itemize}[leftmargin=1.5em, itemsep=0.2em]
+    \item \textbf{Proven Component Technologies:} Leverages standard, high-performance data science and web tools (XGBoost, FastAPI, React) that operate reliably on commodity hardware.
+    \item \textbf{Decoupled Architecture:} Ingestion, predictive modeling, optimization, and visualization modules communicate via standardized JSON/REST schemas, enabling independent testing.
+    \item \textbf{Non-Invasive Decision Support:} By operating as an advisory platform without requiring closed-loop physical grid control, the system eliminates regulatory and hardware safety hurdles.
+\end{itemize}
+
+\subsection{Expected Operational Impact}
+\label{subsec:expected_impact}
+
+GridSense AI delivers tangible qualitative benefits across the clean energy supply chain:
+\begin{itemize}[leftmargin=1.5em, itemsep=0.2em]
+    \item \textbf{Enhanced Grid Reliability:} Advance warning of generation shortfalls enables timely reserve scheduling.
+    \item \textbf{Curtailment Avoidance:} Proactive surplus detection allows excess energy to be routed to storage assets.
+    \item \textbf{Reduced Fossil Dependence:} Intelligent storage dispatch reduces unnecessary peaker generator runtime.
+    \item \textbf{Operational Transparency:} Natural-language explanations eliminate black-box hesitation in control rooms.
+\end{itemize}
+
+\subsection{System Limitations}
+\label{subsec:limitations}
+
+\begin{itemize}[leftmargin=1.5em, itemsep=0.15em]
+    \item \textbf{Data Dependency:} Forecast accuracy relies on the resolution and latency of external meteorological feeds.
+    \item \textbf{Severe Atmospheric Anomalies:} Rare, abrupt weather transitions can exceed statistical prediction intervals.
+    \item \textbf{Operational Context Gaps:} Action quality depends on accurate knowledge of current asset availability.
+\end{itemize}
+
+\subsection{Future Scope}
+\label{subsec:future_scope}
+
+Future iterations will incorporate Transformer-based spatio-temporal sequence models, multi-site portfolio aggregation, automated day-ahead wholesale electricity market bidding, and real-time SCADA streaming feeds.
