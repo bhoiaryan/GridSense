@@ -11,7 +11,15 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import type { LegendProps } from "recharts";
 import type { ForecastPoint } from "../../types";
+
+interface ForecastTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: ForecastPoint;
+  }>;
+}
 
 interface ForecastChartProps {
   data: ForecastPoint[];
@@ -49,7 +57,7 @@ export function ForecastChart({
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={chartData}
-          margin={{ top: 16, right: showIrradiance ? 42 : 20, bottom: 10, left: -4 }}
+          margin={{ top: 12, right: showIrradiance ? 42 : 18, bottom: 8, left: -4 }}
           onClick={(state) => {
             if (state && state.activePayload && state.activePayload[0] && onSelectPoint) {
               const clickedPoint = state.activePayload[0].payload as ForecastPoint;
@@ -57,17 +65,17 @@ export function ForecastChart({
             }
           }}
         >
-          <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
+          <CartesianGrid stroke="#dbe7e1" strokeDasharray="4 6" vertical={false} />
           <XAxis
             dataKey="hour"
             interval={compact ? 3 : data.length > 30 ? 2 : 1}
-            tick={{ fontSize: 11, fill: "#64748b" }}
+            tick={{ fontSize: 11, fill: "#4e6b5d", fontWeight: 500 }}
             tickLine={false}
-            axisLine={{ stroke: "#cbd5e1" }}
+            axisLine={{ stroke: "#c2d6cc" }}
           />
           <YAxis
             yAxisId="left"
-            tick={{ fontSize: 11, fill: "#64748b" }}
+            tick={{ fontSize: 11, fill: "#4e6b5d", fontWeight: 500 }}
             tickLine={false}
             axisLine={false}
             unit=" MW"
@@ -78,7 +86,7 @@ export function ForecastChart({
             <YAxis
               yAxisId="right"
               orientation="right"
-              tick={{ fontSize: 10, fill: "#d97706" }}
+              tick={{ fontSize: 10, fill: "#b45309", fontWeight: 500 }}
               tickLine={false}
               axisLine={false}
               unit=" W/m²"
@@ -88,10 +96,11 @@ export function ForecastChart({
             />
           )}
 
-          <Tooltip content={<CustomForecastTooltip />} />
+          <Tooltip content={<CustomForecastTooltip canInspect={Boolean(onSelectPoint)} />} />
           <Legend
-            wrapperStyle={{ fontSize: 12, paddingTop: 10 }}
+            wrapperStyle={{ fontSize: 12, paddingTop: 8, color: "#4e6b5d", fontWeight: 600 }}
             iconType="circle"
+            content={<ForecastLegend />}
           />
 
           {/* Risk highlight zones */}
@@ -103,8 +112,8 @@ export function ForecastChart({
                 x1="17:00"
                 x2="20:00"
                 fill="#fee2e2"
-                fillOpacity={0.6}
-                label={{ value: "Shortfall (Day 1)", fontSize: 10, fill: "#b91c1c", position: "insideTopLeft" }}
+                fillOpacity={0.5}
+                label={{ value: "Shortfall", fontSize: 10, fill: "#b91c1c", position: "insideTopLeft", fontWeight: 700 }}
               />
 
               {/* Day 2 High Risk Shortfall */}
@@ -114,8 +123,8 @@ export function ForecastChart({
                   x1="D2 16:00"
                   x2="D2 20:00"
                   fill="#fee2e2"
-                  fillOpacity={0.55}
-                  label={{ value: "Overcast Shortfall (D2)", fontSize: 10, fill: "#b91c1c", position: "insideTopLeft" }}
+                  fillOpacity={0.48}
+                  label={{ value: "D2 Shortfall", fontSize: 10, fill: "#b91c1c", position: "insideTopLeft", fontWeight: 700 }}
                 />
               )}
 
@@ -126,8 +135,8 @@ export function ForecastChart({
                   x1="D3 10:00"
                   x2="D3 14:00"
                   fill="#dcfce7"
-                  fillOpacity={0.55}
-                  label={{ value: "Surplus Headroom (D3)", fontSize: 10, fill: "#15803d", position: "insideTopLeft" }}
+                  fillOpacity={0.42}
+                  label={{ value: "D3 Surplus", fontSize: 10, fill: "#15803d", position: "insideTopLeft", fontWeight: 700 }}
                 />
               )}
             </>
@@ -144,7 +153,7 @@ export function ForecastChart({
                 stroke="none"
                 fill="transparent"
                 legendType="none"
-                name="uncertaintyBase"
+                name=""
                 isAnimationActive={false}
               />
               <Area
@@ -153,8 +162,8 @@ export function ForecastChart({
                 dataKey="uncertaintyRange"
                 stackId="uncertaintyStack"
                 stroke="none"
-                fill="#fbbf24"
-                fillOpacity={0.28}
+                fill="#f59e0b"
+                fillOpacity={0.18}
                 name="Uncertainty range (P10-P90)"
                 isAnimationActive={false}
               />
@@ -180,10 +189,10 @@ export function ForecastChart({
             yAxisId="left"
             type="monotone"
             dataKey="historical"
-            stroke="#475569"
-            strokeWidth={2.5}
-            dot={{ r: 3, fill: "#475569" }}
-            activeDot={{ r: 5, fill: "#0f172a" }}
+            stroke="#4e6b5d"
+            strokeWidth={2.25}
+            dot={false}
+            activeDot={{ r: 5, fill: "#0c2419" }}
             name="Historical Measured"
             connectNulls
           />
@@ -193,10 +202,10 @@ export function ForecastChart({
             yAxisId="left"
             type="monotone"
             dataKey="expected"
-            stroke="#0f766e"
-            strokeWidth={3}
-            dot={{ r: 2.5, fill: "#0f766e" }}
-            activeDot={{ r: 6, fill: "#0f766e", stroke: "#ffffff", strokeWidth: 2 }}
+            stroke="#047857"
+            strokeWidth={2.75}
+            dot={false}
+            activeDot={{ r: 6, fill: "#047857", stroke: "#ffffff", strokeWidth: 2 }}
             name="Expected Solar Forecast"
           />
 
@@ -208,7 +217,7 @@ export function ForecastChart({
               dataKey="demand"
               stroke="#dc2626"
               strokeWidth={2}
-              strokeDasharray="4 4"
+              strokeDasharray="6 5"
               dot={false}
               name="Grid Demand Requirement"
             />
@@ -218,10 +227,10 @@ export function ForecastChart({
           <ReferenceLine
             yAxisId="left"
             x="15:00"
-            stroke="#0f172a"
-            strokeWidth={2}
-            strokeDasharray="4 4"
-            label={{ value: "NOW (15:00)", position: "insideTopRight", fontSize: 11, fill: "#0f172a", fontWeight: "bold" }}
+            stroke="#0c2419"
+            strokeWidth={1.75}
+            strokeDasharray="4 5"
+            label={{ value: "NOW", position: "insideTopRight", fontSize: 11, fill: "#0c2419", fontWeight: "bold" }}
           />
 
           {/* Selected Hour Indicator */}
@@ -229,10 +238,10 @@ export function ForecastChart({
             <ReferenceLine
               yAxisId="left"
               x={selectedHour}
-              stroke="#0f766e"
+              stroke="#047857"
               strokeWidth={1.5}
               strokeDasharray="2 2"
-              label={{ value: "Selected", position: "insideBottom", fontSize: 10, fill: "#0f766e" }}
+              label={{ value: "Selected", position: "insideBottom", fontSize: 10, fill: "#047857" }}
             />
           )}
         </ComposedChart>
@@ -241,8 +250,25 @@ export function ForecastChart({
   );
 }
 
+function ForecastLegend({ payload }: LegendProps) {
+  const visibleItems = (payload ?? []).filter((item) => item.value && item.value !== "uncertaintyBase");
+
+  if (!visibleItems.length) return null;
+
+  return (
+    <ul className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-semibold text-slate-600">
+      {visibleItems.map((item) => (
+        <li key={`${item.dataKey}-${item.value}`} className="inline-flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+          <span>{item.value}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 // Custom rich tooltip for operator inspection
-function CustomForecastTooltip({ active, payload }: any) {
+function CustomForecastTooltip({ active, payload, canInspect }: ForecastTooltipProps & { canInspect?: boolean }) {
   if (!active || !payload || !payload.length) return null;
 
   const data: ForecastPoint = payload[0].payload;
@@ -322,8 +348,7 @@ function CustomForecastTooltip({ active, payload }: any) {
         )}
       </div>
 
-      <p className="mt-2 text-[10px] text-slate-400 italic">Click point to inspect full causal analysis</p>
+      {canInspect && <p className="mt-2 text-[10px] text-slate-400 italic">Click point to inspect full causal analysis</p>}
     </div>
   );
 }
-

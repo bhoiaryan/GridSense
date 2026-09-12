@@ -12,12 +12,12 @@ export function Decisions() {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Detected events</p>
-            <h2 className="mt-1 text-lg font-semibold text-grid-ink">Operational risk queue</h2>
+            <h2 className="mt-1 text-base font-semibold text-grid-ink">Operational risk queue</h2>
           </div>
         </div>
         <div className="divide-y divide-grid-line">
           {riskEvents.map((event) => (
-            <button key={event.id} className="block w-full px-4 py-4 text-left transition hover:bg-slate-50">
+            <button key={event.id} className="block w-full px-4 py-3.5 text-left transition hover:bg-slate-50/50">
               <div className="flex items-center justify-between gap-3">
                 <RiskBadge risk={event.risk} />
                 <span className="text-xs font-semibold text-grid-muted">{event.window}</span>
@@ -33,12 +33,12 @@ export function Decisions() {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Selected event</p>
-            <h2 className="mt-1 text-lg font-semibold text-grid-ink">Evening shortfall response</h2>
+            <h2 className="mt-1 text-base font-semibold text-grid-ink">Evening shortfall response</h2>
           </div>
           <RiskBadge risk={selected.risk} />
         </div>
         <div className="panel-body space-y-5">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="rounded-lg border border-red-200 bg-red-50/80 p-4">
             <div className="flex gap-3">
               <CircleAlert className="mt-0.5 text-grid-red" size={20} />
               <div>
@@ -53,7 +53,7 @@ export function Decisions() {
               <p className="eyebrow">Possible actions</p>
               <div className="mt-3 space-y-2">
                 {actions.map((action) => (
-                  <div key={action} className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2">
+                  <div key={action} className="flex items-center justify-between rounded-md border border-grid-line bg-slate-50/50 px-3 py-2">
                     <span className="text-sm font-medium text-grid-ink">{action}</span>
                     <span className="text-xs font-semibold text-grid-muted">{action === "No action" ? "Rejected" : "Feasible"}</span>
                   </div>
@@ -77,7 +77,7 @@ export function Decisions() {
               <Zap className="mt-0.5 text-grid-teal" size={20} />
               <div>
                 <p className="eyebrow text-grid-teal">Recommended action</p>
-                <h3 className="mt-1 text-lg font-semibold text-grid-ink">{recommendation.action}</h3>
+                <h3 className="mt-1 text-base font-semibold text-grid-ink">{recommendation.action}</h3>
                 <p className="mt-2 text-sm text-grid-ink">{recommendation.reason}</p>
                 <p className="mt-2 text-sm text-grid-muted">{recommendation.expectedImpact}</p>
               </div>

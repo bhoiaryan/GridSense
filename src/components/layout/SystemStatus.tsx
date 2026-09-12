@@ -18,7 +18,7 @@ export function SystemStatus({ items }: SystemStatusProps) {
         {items.map((item) => {
           const Icon = item.status === "Operational" ? CircleCheck : item.status === "Degraded" ? CircleDashed : CircleX;
           return (
-            <div key={item.label} className="flex items-center justify-between gap-3 px-4 py-3">
+            <div key={item.label} className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-slate-50">
               <div>
                 <p className="text-sm font-semibold text-grid-ink">{item.label}</p>
                 <p className="text-xs text-grid-muted">{item.detail}</p>
