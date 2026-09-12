@@ -1,7 +1,18 @@
 from typing import List
 from ..schemas import RecommendationSchema, ScenarioInputSchema, ScenarioResultSchema, SystemStatusItemSchema
+from .ml_engine_client import get_model_intelligence, run_model_scenario
+from .data_loader import DATASET_DIR
+from .ml_engine_client import get_model_forecast
 
 def get_recommendation(site_id: str) -> RecommendationSchema:
+    target_id = "SITE_001" if site_id == "solar-01" else site_id
+    model_intelligence = get_model_intelligence(target_id)
+    if model_intelligence and isinstance(model_intelligence.get("recommendation"), dict):
+        try:
+            return RecommendationSchema(**model_intelligence["recommendation"])
+        except (TypeError, ValueError):
+            pass
+
     return RecommendationSchema(
         action="DISCHARGE_STORAGE",
         reason="Anticipated solar generation drop below evening demand threshold (18:00–20:00). Battery state of charge is optimal at 68%.",
@@ -14,6 +25,13 @@ def get_recommendation(site_id: str) -> RecommendationSchema:
     )
 
 def run_simulation(input_data: ScenarioInputSchema) -> ScenarioResultSchema:
+    model_result = run_model_scenario(input_data.model_dump())
+    if model_result:
+        try:
+            return ScenarioResultSchema(**model_result)
+        except (TypeError, ValueError):
+            pass
+
     base_gen = 32.4
     cloud_attenuation = 1.0 - (input_data.cloudCoverChange / 100.0) * 0.7
     simulated_gen = round(max(5.0, base_gen * cloud_attenuation), 1)
@@ -52,10 +70,39 @@ def run_simulation(input_data: ScenarioInputSchema) -> ScenarioResultSchema:
     )
 
 def get_system_status() -> List[SystemStatusItemSchema]:
+    required_data_files = (
+        DATASET_DIR / "demo" / "sites.csv",
+        DATASET_DIR / "demo" / "operations.csv",
+        DATASET_DIR / "raw" / "generation_weather.csv",
+    )
+    data_available = all(path.exists() and path.stat().st_size > 0 for path in required_data_files)
+    forecast = get_model_forecast("SITE_001", 24) if data_available else None
+    intelligence = get_model_intelligence("SITE_001") if data_available else None
+
+    forecast_points = forecast.get("forecast", []) if isinstance(forecast, dict) else []
+    risks = intelligence.get("riskEvents") if isinstance(intelligence, dict) else None
+    recommendation = intelligence.get("recommendation") if isinstance(intelligence, dict) else None
+
     return [
-        SystemStatusItemSchema(label="Data Pipeline", status="Operational", detail="Telemetry streaming from demo data pack"),
-        SystemStatusItemSchema(label="Forecast Engine (XGBoost)", status="Operational", detail="XGBoost inference pipeline ready (latency 12ms)"),
-        SystemStatusItemSchema(label="Risk Engine", status="Operational", detail="Shortfall & surplus thresholds monitoring active"),
-        SystemStatusItemSchema(label="Decision Engine", status="Operational", detail="Rule-based recommendation synthesizer online"),
+        SystemStatusItemSchema(
+            label="Data Pipeline",
+            status="Operational" if data_available else "Unavailable",
+            detail="GridSense telemetry files are readable." if data_available else "One or more required GridSense telemetry files are missing or empty.",
+        ),
+        SystemStatusItemSchema(
+            label="Forecast Engine (XGBoost)",
+            status="Operational" if len(forecast_points) == 24 else "Unavailable",
+            detail=f"XGBoost returned {len(forecast_points)} forecast points for SITE_001." if len(forecast_points) == 24 else "No valid XGBoost forecast response was received.",
+        ),
+        SystemStatusItemSchema(
+            label="Risk Engine",
+            status="Operational" if isinstance(risks, list) else "Unavailable",
+            detail=f"XGBoost risk evaluation returned {len(risks)} active event(s)." if isinstance(risks, list) else "No model-derived risk evaluation was received.",
+        ),
+        SystemStatusItemSchema(
+            label="Decision Engine",
+            status="Operational" if isinstance(recommendation, dict) else "Unavailable",
+            detail=f"Model-derived recommendation: {recommendation.get('action', 'unknown')}." if isinstance(recommendation, dict) else "No model-derived recommendation was received.",
+        ),
     ]
 

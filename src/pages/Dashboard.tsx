@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -14,28 +14,106 @@ import {
 import { Link } from "react-router-dom";
 import { ForecastChart } from "../components/charts/ForecastChart";
 import { RiskBadge } from "../components/alerts/RiskBadge";
-import {
-  getForecastForHorizon,
-  getHorizonSummary,
-  kpis,
-  recommendation,
-  riskEvents,
-  site,
-  systemStatus
-} from "../data/mockData";
-import type { ForecastHorizon } from "../types";
+import { api } from "../services/api";
+import type { DashboardResponse, ForecastHorizon, ForecastPoint, Kpi } from "../types";
 
 export function Dashboard() {
   const [horizon, setHorizon] = useState<ForecastHorizon>("24h");
   const [showUncertainty, setShowUncertainty] = useState(true);
   const [showDemand, setShowDemand] = useState(true);
   const [showRiskAreas, setShowRiskAreas] = useState(true);
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
+  const [forecastData, setForecastData] = useState<ForecastPoint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isForecastLoading, setIsForecastLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const forecastData = useMemo(() => getForecastForHorizon(horizon), [horizon]);
-  const summary = useMemo(() => getHorizonSummary(horizon), [horizon]);
-  const primaryRisk = riskEvents[0];
-  const generation = kpis.find((item) => item.label === "Current Generation")!;
-  const battery = kpis.find((item) => item.label === "Battery Status")!;
+  useEffect(() => {
+    let cancelled = false;
+
+    setIsLoading(true);
+    setError(null);
+    api.getDashboard("solar-01")
+      .then((response) => {
+        if (!cancelled) {
+          setDashboard(response);
+          setForecastData(response.currentForecast);
+        }
+      })
+      .catch((requestError: unknown) => {
+        if (!cancelled) {
+          setError(requestError instanceof Error ? requestError.message : "Unable to load the operations dashboard.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
+  useEffect(() => {
+    if (!dashboard) return;
+
+    if (horizon === "24h") {
+      setForecastData(dashboard.currentForecast);
+      return;
+    }
+
+    let cancelled = false;
+    setIsForecastLoading(true);
+    setError(null);
+    const hours = Number(horizon.slice(0, -1)) as 48 | 72;
+    api.getForecast("solar-01", hours)
+      .then((response) => {
+        if (!cancelled) setForecastData(response.forecast);
+      })
+      .catch((requestError: unknown) => {
+        if (!cancelled) {
+          setError(requestError instanceof Error ? requestError.message : "Unable to load the selected forecast horizon.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsForecastLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dashboard, horizon]);
+
+  const summary = useMemo(() => getForecastSummary(forecastData), [forecastData]);
+
+  if (isLoading) {
+    return <DashboardMessage title="Loading operations dashboard" detail="Retrieving the latest site, forecast, risk, and decision data." />;
+  }
+
+  if (!dashboard) {
+    return (
+      <DashboardMessage
+        title="Dashboard unavailable"
+        detail={error ?? "The dashboard response was empty."}
+        action={<button className="button-primary" onClick={() => setReloadKey((key) => key + 1)}>Try again</button>}
+      />
+    );
+  }
+
+  const { site, kpis, recommendation, riskEvents, systemStatus } = dashboard;
+  const primaryRisk = riskEvents[0] ?? {
+    id: "no-active-risk",
+    risk: "LOW" as const,
+    type: "UNCERTAINTY" as const,
+    window: "No active risk window",
+    expectedImpact: "No material impact detected.",
+    problem: "The risk engine has not reported an active operational event.",
+  };
+  const generation = kpis.find((item) => item.label === "Current Generation") ?? currentGenerationKpi(site.currentGenerationMw, site.capacityMw);
+  const battery = kpis.find((item) => item.label.toLowerCase().includes("battery")) ?? batteryKpi(site.batterySoc, site.dischargeLimitMw);
+  const currentPoint = forecastData[0];
+  const operationalCount = systemStatus.filter((item) => item.status === "Operational").length;
 
   return (
     <div className="space-y-4">
@@ -45,7 +123,7 @@ export function Dashboard() {
           <div>
             <div className="flex items-center gap-2">
               <p className="eyebrow">Current Status</p>
-              <span className="text-[11px] text-grid-muted">Telemetry ingest: 15:00 NOW</span>
+              <span className="text-[11px] text-grid-muted">Telemetry replay: {currentPoint?.fullTimeLabel ?? "—"}</span>
             </div>
             <h2 id="current-status-title" className="mt-0.5 text-base font-bold text-grid-ink">
               {site.name} <span className="text-xs font-normal text-grid-muted">({site.location} · {site.capacityMw} MW PV)</span>
@@ -53,7 +131,7 @@ export function Dashboard() {
           </div>
           <div className="flex items-center gap-1.5 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 sm:self-auto">
             <span className="state-dot bg-emerald-500" />
-            Live
+            Replay data
           </div>
         </div>
 
@@ -62,22 +140,22 @@ export function Dashboard() {
             <div className="rounded-xl border border-[#dfeae1] bg-[#edf5ef] p-2.5">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#536b5a]">Net load</p>
               <div className="mt-1 flex items-end justify-between gap-2">
-                <span className="text-lg font-bold text-grid-ink">48.2 MW</span>
-                <span className="text-[10px] font-semibold text-[#3d6d52]">+8.1%</span>
+                <span className="text-lg font-bold text-grid-ink">{currentPoint?.demand.toFixed(1) ?? "—"} MW</span>
+                <span className="text-[10px] font-semibold text-[#3d6d52]">Forecast demand</span>
               </div>
             </div>
             <div className="rounded-xl border border-[#dde6ec] bg-[#f3f5f7] p-2.5">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5f6d7a]">Battery reserve</p>
               <div className="mt-1 flex items-end justify-between gap-2">
-                <span className="text-lg font-bold text-grid-ink">68% SOC</span>
-                <span className="text-[10px] font-semibold text-[#5a6d7d]">22 MW</span>
+                <span className="text-lg font-bold text-grid-ink">{site.batterySoc}% SOC</span>
+                <span className="text-[10px] font-semibold text-[#5a6d7d]">{site.dischargeLimitMw} MW max</span>
               </div>
             </div>
             <div className="rounded-xl border border-[#e8dfd2] bg-[#f5f1ea] p-2.5">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6a5c47]">Forecast stability</p>
               <div className="mt-1 flex items-end justify-between gap-2">
-                <span className="text-lg font-bold text-grid-ink">89%</span>
-                <span className="text-[10px] font-semibold text-[#6c5b47]">High</span>
+                <span className="text-lg font-bold text-grid-ink">{summary.avgConfidenceScore}%</span>
+                <span className="text-[10px] font-semibold text-[#6c5b47]">Model confidence</span>
               </div>
             </div>
           </div>
@@ -112,7 +190,7 @@ export function Dashboard() {
             </div>
 
             <h3 id="risk-title" className="mt-3 text-sm font-bold text-[#7d3432]">
-              Potential Evening Shortfall
+              {primaryRisk.type === "SHORTFALL" ? "Forecast Shortfall" : `Forecast ${primaryRisk.type.toLowerCase()}`}
             </h3>
 
             <div className="mt-3 space-y-2 rounded-2xl border border-[#ebd5d2] bg-[#fff1f0] p-3 text-xs">
@@ -128,7 +206,7 @@ export function Dashboard() {
           </div>
 
           <p className="mt-3 text-[11px] font-medium text-[#8a4946]">
-            Solar generation declines while feeder demand peaks.
+            {primaryRisk.problem}
           </p>
         </section>
 
@@ -174,7 +252,7 @@ export function Dashboard() {
               <p className="eyebrow">Generation Trend</p>
               <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
                 <Clock3 size={12} className="text-slate-400" />
-                Live: 15:00 NOW
+                {isForecastLoading ? "Updating forecast…" : `Telemetry: ${currentPoint?.fullTimeLabel ?? currentPoint?.hour ?? "—"}`}
               </span>
             </div>
             <h2 id="generation-trend-title" className="text-sm font-semibold text-grid-ink">
@@ -212,6 +290,7 @@ export function Dashboard() {
             <LayerToggle label="Uncertainty (P10-P90)" tone="amber" active={showUncertainty} onClick={() => setShowUncertainty((v) => !v)} />
             <LayerToggle label="Demand Line" tone="red" active={showDemand} onClick={() => setShowDemand((v) => !v)} />
             <LayerToggle label="Risk Zones" tone="red" active={showRiskAreas} onClick={() => setShowRiskAreas((v) => !v)} />
+            {error && <span className="text-[11px] font-medium text-[#9b3f42]">{error}</span>}
           </div>
 
           <ForecastChart
@@ -241,7 +320,7 @@ export function Dashboard() {
             </h2>
           </div>
           <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-            All 4 Services Operational
+            {operationalCount} of {systemStatus.length} Services Operational
           </span>
         </div>
 
@@ -264,6 +343,56 @@ export function Dashboard() {
 }
 
 /* ─── Sub-components ─────────────────────────────────────────────── */
+
+function getForecastSummary(data: ForecastPoint[]) {
+  const totalProjectedMwh = data.reduce((sum, point) => sum + point.expected, 0);
+  const totalDemandMwh = data.reduce((sum, point) => sum + point.demand, 0);
+  const peak = data.reduce<ForecastPoint | undefined>((currentPeak, point) =>
+    !currentPeak || point.expected > currentPeak.expected ? point : currentPeak, undefined);
+  const confidencePoints = data.filter((point) => point.confidenceScore !== undefined);
+  const avgConfidenceScore = confidencePoints.length
+    ? Math.round(confidencePoints.reduce((sum, point) => sum + (point.confidenceScore ?? 0), 0) / confidencePoints.length)
+    : 0;
+
+  return {
+    totalProjectedMwh: totalProjectedMwh.toFixed(1),
+    totalDemandMwh: totalDemandMwh.toFixed(1),
+    peakGenerationMw: peak?.expected.toFixed(1) ?? "—",
+    peakHour: peak?.fullTimeLabel ?? peak?.hour ?? "—",
+    avgConfidenceScore,
+  };
+}
+
+function currentGenerationKpi(currentGenerationMw: number, capacityMw: number): Kpi {
+  return {
+    label: "Current Generation",
+    value: `${currentGenerationMw.toFixed(1)} MW`,
+    detail: `${((currentGenerationMw / capacityMw) * 100).toFixed(1)}% of ${capacityMw} MW rated capacity`,
+    trend: "Telemetry replay",
+    status: "OK",
+  };
+}
+
+function batteryKpi(batterySoc: number, dischargeLimitMw: number): Kpi {
+  return {
+    label: "Battery Readiness",
+    value: `${batterySoc}% SoC`,
+    detail: "Storage availability from current site telemetry",
+    trend: `Discharge ready at ${dischargeLimitMw} MW max`,
+    status: "OK",
+  };
+}
+
+function DashboardMessage({ title, detail, action }: { title: string; detail: string; action?: ReactNode }) {
+  return (
+    <section className="panel border-[#dfe7e1] bg-[#f9faf9] p-6 text-center">
+      <p className="eyebrow">Operations dashboard</p>
+      <h2 className="mt-2 text-lg font-bold text-grid-ink">{title}</h2>
+      <p className="mx-auto mt-2 max-w-lg text-sm text-grid-muted">{detail}</p>
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
+    </section>
+  );
+}
 
 function StatusMetric({
   icon: Icon,

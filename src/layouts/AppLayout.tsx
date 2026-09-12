@@ -1,7 +1,9 @@
+import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Activity, BarChart3, BatteryCharging, Bell, Building2, Gauge, GitBranch, LayoutDashboard, Search } from "lucide-react";
 import { cn } from "../lib/utils";
-import { site } from "../data/mockData";
+import { api } from "../services/api";
+import type { SiteInfo, SystemStatusItem } from "../types";
 
 const navigation = [
   { label: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -22,6 +24,40 @@ const titles: Record<string, { title: string; description: string }> = {
 export function AppLayout() {
   const location = useLocation();
   const current = titles[location.pathname] ?? titles["/"];
+  const [site, setSite] = useState<SiteInfo | null>(null);
+  const [systemStatus, setSystemStatus] = useState<SystemStatusItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.all([api.getSite("solar-01"), api.getSystemStatus()])
+      .then(([siteResponse, statusResponse]) => {
+        if (!cancelled) {
+          setSite(siteResponse);
+          setSystemStatus(statusResponse);
+        }
+      })
+      .catch(() => {
+        // Page-level views show their own request errors. The layout remains
+        // usable while the gateway is unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const health = useMemo(() => {
+    if (!systemStatus.length) return null;
+    const operationalCount = systemStatus.filter((item) => item.status === "Operational").length;
+    return {
+      percent: Math.round((operationalCount / systemStatus.length) * 100),
+      operationalCount,
+      totalCount: systemStatus.length,
+    };
+  }, [systemStatus]);
+
+  const siteName = site?.name ?? "Loading site…";
 
   return (
     <div className="min-h-screen bg-grid-bg text-grid-ink">
@@ -42,12 +78,14 @@ export function AppLayout() {
           <div className="rounded-2xl border border-emerald-300/15 bg-white/5 p-3 shadow-inner shadow-emerald-950/20">
             <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-200/80">
               <span>Grid health</span>
-              <span>96%</span>
+              <span>{health ? `${health.percent}%` : "—"}</span>
             </div>
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-emerald-950/60">
-              <div className="h-full w-[96%] rounded-full bg-gradient-to-r from-emerald-300 via-emerald-400 to-lime-300" />
+              <div className="h-full rounded-full bg-gradient-to-r from-emerald-300 via-emerald-400 to-lime-300" style={{ width: `${health?.percent ?? 0}%` }} />
             </div>
-            <p className="mt-3 text-[11px] leading-5 text-slate-300">All core services stable across generation, risk, and balancing layers.</p>
+            <p className="mt-3 text-[11px] leading-5 text-slate-300">
+              {health ? `${health.operationalCount} of ${health.totalCount} reported subsystems operational.` : "Checking reported subsystem status…"}
+            </p>
           </div>
         </div>
 
@@ -81,7 +119,7 @@ export function AppLayout() {
                 System Status
               </div>
               <p className="mt-2 text-xs leading-5 text-slate-300">
-                Forecast, risk, and decision services are running in demo mode.
+                This workspace is showing a historical telemetry replay and model-derived decisions.
               </p>
             </div>
           </div>
@@ -100,11 +138,11 @@ export function AppLayout() {
               {location.pathname !== "/" && (
                 <div className="hidden items-center gap-2 rounded-xl border border-grid-line bg-slate-50/90 px-3 py-2 text-sm text-grid-muted shadow-sm md:flex">
                   <Search size={15} className="text-emerald-700" />
-                  <span>{site.name}</span>
+                  <span>{siteName}</span>
                 </div>
               )}
-              <select aria-label="Site" className="field min-w-44 shadow-sm" defaultValue={site.id}>
-                <option value={site.id}>{site.name}</option>
+              <select aria-label="Site" className="field min-w-44 shadow-sm" value={site?.id ?? "loading"} disabled>
+                <option value={site?.id ?? "loading"}>{siteName}</option>
               </select>
               {location.pathname !== "/" && (
                 <select className="field shadow-sm" defaultValue="24h">

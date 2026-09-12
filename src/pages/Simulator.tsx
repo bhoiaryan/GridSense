@@ -3,7 +3,20 @@ import { RiskBadge } from "../components/alerts/RiskBadge";
 import { useScenario } from "../hooks/useScenario";
 
 export function Simulator() {
-  const { baseline, input, result, setInput } = useScenario();
+  const { baseline, input, result, setInput, isLoading, error, runSimulation, retry } = useScenario();
+
+  if (!baseline || !result) {
+    return (
+      <section className="panel border-[#dfe7e1] bg-[#f9faf9] p-6 text-center">
+        <p className="eyebrow">Scenario simulator</p>
+        <h2 className="mt-2 text-lg font-bold text-grid-ink">{error ? "Simulator unavailable" : "Preparing simulation"}</h2>
+        <p className="mx-auto mt-2 max-w-lg text-sm text-grid-muted">
+          {error ?? "Calculating the live baseline and initial scenario through the GridSense gateway."}
+        </p>
+        {error && <button className="button-primary mt-4" onClick={() => void retry()}>Try again</button>}
+      </section>
+    );
+  }
 
   return (
     <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -33,9 +46,9 @@ export function Simulator() {
           />
           <Toggle label="Battery available" checked={input.batteryAvailable} onChange={(value) => setInput({ ...input, batteryAvailable: value })} />
           <Toggle label="Backup available" checked={input.backupAvailable} onChange={(value) => setInput({ ...input, backupAvailable: value })} />
-          <button className="button-primary w-full">
+          <button className="button-primary w-full disabled:cursor-not-allowed disabled:opacity-60" onClick={() => void runSimulation()} disabled={isLoading}>
             <RotateCw size={16} />
-            Run Simulation
+            {isLoading ? "Running simulation…" : "Run Simulation"}
           </button>
         </div>
       </section>
@@ -56,6 +69,7 @@ export function Simulator() {
             <p className="eyebrow">Why did the recommendation change?</p>
             <p className="mt-2 text-sm leading-6 text-grid-ink">{result.explanation}</p>
           </div>
+          {error && <p className="mt-3 text-sm font-medium text-[#9b3f42]">{error}</p>}
         </div>
       </section>
     </div>

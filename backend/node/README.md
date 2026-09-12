@@ -10,6 +10,28 @@ The Node.js backend serves as the **API Gateway / Backend-for-Frontend (BFF)** f
 
 ## Setup & Running
 
+## Unified local startup
+
+From the project root, one command starts the XGBoost engine (`:8001`), the FastAPI contract service (`:8000`), and this gateway (`:5000`):
+
+```powershell
+npm run dev:backend
+```
+
+Before the first run, install each service's dependencies:
+
+```powershell
+cd backend/node
+npm install
+cd ../mlengine
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+Use `Ctrl+C` in the startup terminal to stop both services.
+
+## Gateway-only setup
+
 1. **Install dependencies**:
    ```bash
    cd backend/node
@@ -21,7 +43,9 @@ The Node.js backend serves as the **API Gateway / Backend-for-Frontend (BFF)** f
    ```bash
    PORT=5000
    ML_SERVICE_URL=http://localhost:8000
-   USE_MOCK_FALLBACK=true
+   # Optional development-only fallback. Keep false for normal operation so
+   # unavailable ML services are reported to the user instead of masked.
+   USE_MOCK_FALLBACK=false
    CORS_ORIGIN=http://localhost:5173
    ```
 

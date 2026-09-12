@@ -1,10 +1,57 @@
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, CircleAlert, Zap } from "lucide-react";
 import { RiskBadge } from "../components/alerts/RiskBadge";
-import { recommendation, riskEvents, site } from "../data/mockData";
+import { api } from "../services/api";
+import type { Recommendation, RiskEvent, SiteInfo } from "../types";
 
 export function Decisions() {
-  const selected = riskEvents[0];
+  const [site, setSite] = useState<SiteInfo | null>(null);
+  const [riskEvents, setRiskEvents] = useState<RiskEvent[]>([]);
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const actions = ["Discharge storage", "Import energy", "Activate backup", "No action"];
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+
+    Promise.all([api.getSite("solar-01"), api.getEvents("solar-01"), api.getRecommendation("solar-01")])
+      .then(([siteResponse, eventsResponse, recommendationResponse]) => {
+        if (!cancelled) {
+          setSite(siteResponse);
+          setRiskEvents(eventsResponse);
+          setRecommendation(recommendationResponse);
+          setSelectedEventId((currentId) => currentId ?? eventsResponse[0]?.id ?? null);
+        }
+      })
+      .catch((requestError: unknown) => {
+        if (!cancelled) setError(requestError instanceof Error ? requestError.message : "Unable to load decision data.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
+  const selected = useMemo(
+    () => riskEvents.find((event) => event.id === selectedEventId) ?? riskEvents[0],
+    [riskEvents, selectedEventId],
+  );
+
+  if (isLoading) return <DecisionMessage title="Loading decision center" detail="Retrieving active risks, resources, and the recommended action." />;
+
+  if (error || !site || !recommendation) {
+    return <DecisionMessage title="Decision center unavailable" detail={error ?? "The gateway returned incomplete decision data."} action={<button className="button-primary" onClick={() => setReloadKey((key) => key + 1)}>Try again</button>} />;
+  }
+
+  if (!selected) return <DecisionMessage title="No active events" detail="The risk engine has not reported an actionable event for this site." />;
 
   return (
     <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -17,7 +64,7 @@ export function Decisions() {
         </div>
         <div className="divide-y divide-[#dfe7e1] bg-white/60">
           {riskEvents.map((event) => (
-            <button key={event.id} className="block w-full px-4 py-3.5 text-left transition hover:bg-[#f4faf6]">
+            <button key={event.id} onClick={() => setSelectedEventId(event.id)} className={`block w-full px-4 py-3.5 text-left transition hover:bg-[#f4faf6] ${selected.id === event.id ? "bg-[#edf8f2]" : ""}`}>
               <div className="flex items-center justify-between gap-3">
                 <RiskBadge risk={event.risk} />
                 <span className="text-xs font-semibold text-grid-muted">{event.window}</span>
@@ -33,7 +80,7 @@ export function Decisions() {
         <div className="panel-header bg-[#f3f7f4]">
           <div>
             <p className="eyebrow">Selected event</p>
-            <h2 className="mt-1 text-base font-semibold text-grid-ink">Evening shortfall response</h2>
+            <h2 className="mt-1 text-base font-semibold text-grid-ink">{selected.type.replace("_", " ")} response</h2>
           </div>
           <RiskBadge risk={selected.risk} />
         </div>
@@ -94,6 +141,17 @@ export function Decisions() {
         </div>
       </section>
     </div>
+  );
+}
+
+function DecisionMessage({ title, detail, action }: { title: string; detail: string; action?: React.ReactNode }) {
+  return (
+    <section className="panel border-[#dfe7e1] bg-[#f9faf9] p-6 text-center">
+      <p className="eyebrow">Decision center</p>
+      <h2 className="mt-2 text-lg font-bold text-grid-ink">{title}</h2>
+      <p className="mx-auto mt-2 max-w-lg text-sm text-grid-muted">{detail}</p>
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
+    </section>
   );
 }
 

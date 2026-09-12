@@ -3,6 +3,7 @@ import { env } from "../config/env.js";
 import
   {
     ForecastResponse,
+    Kpi,
     Recommendation,
     RiskEvent,
     ScenarioInput,
@@ -94,6 +95,23 @@ export class MLServiceClient
       {
         console.warn(`[MLClient] Fallback: returning mock forecast for site ${siteId} (${hours}h)`);
         return MockDataService.getForecast(siteId, hours);
+      }
+      throw err;
+    }
+  }
+
+  async getDashboardKpis(siteId: string): Promise<Kpi[]>
+  {
+    try
+    {
+      const response = await this.client.get<Kpi[]>(`/api/dashboard/${siteId}/kpis`);
+      return response.data;
+    } catch (err)
+    {
+      if (env.USE_MOCK_FALLBACK)
+      {
+        console.warn(`[MLClient] Fallback: returning mock dashboard KPIs for ${siteId}`);
+        return MockDataService.getKpis();
       }
       throw err;
     }

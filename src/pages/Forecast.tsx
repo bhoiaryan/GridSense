@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -25,13 +25,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { ForecastChart } from "../components/charts/ForecastChart";
 import { RiskBadge } from "../components/alerts/RiskBadge";
-import {
-  getForecastForHorizon,
-  getHorizonSummary,
-  riskPeriodsList,
-  site
-} from "../data/mockData";
-import type { ForecastHorizon, ForecastPoint } from "../types";
+import { api } from "../services/api";
+import type { ForecastHorizon, ForecastPoint, SiteInfo } from "../types";
 
 type DetailTab = "ai" | "weather" | "table";
 
@@ -45,10 +40,44 @@ export function Forecast() {
   const [showDemand, setShowDemand] = useState<boolean>(true);
   const [showIrradiance, setShowIrradiance] = useState<boolean>(false);
   const [showRiskAreas, setShowRiskAreas] = useState<boolean>(true);
+  const [site, setSite] = useState<SiteInfo | null>(null);
+  const [activeData, setActiveData] = useState<ForecastPoint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // Filtered dataset according to selected horizon
-  const activeData = useMemo(() => getForecastForHorizon(horizon), [horizon]);
-  const summary = useMemo(() => getHorizonSummary(horizon), [horizon]);
+  useEffect(() => {
+    let cancelled = false;
+    const hours = Number(horizon.slice(0, -1)) as 24 | 48 | 72;
+
+    setIsLoading(true);
+    setError(null);
+    Promise.all([api.getSite("solar-01"), api.getForecast("solar-01", hours)])
+      .then(([siteResponse, forecastResponse]) => {
+        if (!cancelled) {
+          setSite(siteResponse);
+          setActiveData(forecastResponse.forecast);
+          const selectedStillExists = forecastResponse.forecast.some((point) => point.hour === selectedHour);
+          if (!selectedStillExists) {
+            setSelectedHour(forecastResponse.forecast.find((point) => point.hour === "18:00")?.hour ?? forecastResponse.forecast[0]?.hour ?? "");
+          }
+        }
+      })
+      .catch((requestError: unknown) => {
+        if (!cancelled) {
+          setError(requestError instanceof Error ? requestError.message : "Unable to load the forecast.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [horizon, reloadKey]);
+
+  const summary = useMemo(() => getForecastSummary(activeData), [activeData]);
 
   // Currently selected forecast point
   const selectedPoint = useMemo(() => {
@@ -59,19 +88,32 @@ export function Forecast() {
     );
   }, [activeData, selectedHour]);
 
-  // Risk periods that fall within current horizon
+  // Risk periods are derived from the live forecast response.
   const relevantRiskPeriods = useMemo(() => {
-    if (horizon === "24h") {
-      return riskPeriodsList.filter((r) => r.horizonTag.includes("24H"));
-    }
-    if (horizon === "48h") {
-      return riskPeriodsList.filter((r) => r.horizonTag.includes("24H") || r.horizonTag.includes("48H"));
-    }
-    return riskPeriodsList;
-  }, [horizon]);
+    return activeData
+      .filter((point) => point.risk !== "LOW")
+      .slice(0, 6)
+      .map((point) => {
+        const deficit = point.demand - point.expected;
+        const isShortfall = deficit > 0;
+        return {
+          id: point.timestamp,
+          risk: point.risk,
+          targetHour: point.hour,
+          type: isShortfall ? "SHORTFALL" : "UNCERTAINTY",
+          timeWindow: point.fullTimeLabel ?? point.hour,
+          name: isShortfall ? "Generation shortfall" : "Forecast uncertainty",
+          metricLabel: isShortfall ? "Net deficit" : "Confidence range",
+          metricValue: isShortfall ? `${deficit.toFixed(1)} MW` : `${(point.upper - point.lower).toFixed(1)} MW`,
+          weatherCause: point.weatherDriver ?? point.explanation ?? "Forecast variance is under active monitoring.",
+          actionHint: isShortfall ? "Review response" : "Monitor conditions",
+        };
+      });
+  }, [activeData]);
 
   // Step between hours in the inspector
   const handleStepHour = (direction: "prev" | "next") => {
+    if (!selectedPoint) return;
     const currentIndex = activeData.findIndex((p) => p.hour === selectedPoint.hour);
     if (currentIndex === -1) return;
 
@@ -89,6 +131,20 @@ export function Forecast() {
   const handleSelectPoint = (point: ForecastPoint) => {
     setSelectedHour(point.hour);
   };
+
+  if (isLoading) {
+    return <ForecastMessage title="Loading forecast" detail="Retrieving the selected forecast horizon from the GridSense gateway." />;
+  }
+
+  if (error || !site || !selectedPoint) {
+    return (
+      <ForecastMessage
+        title="Forecast unavailable"
+        detail={error ?? "The gateway returned no forecast points."}
+        action={<button className="button-primary" onClick={() => setReloadKey((key) => key + 1)}>Try again</button>}
+      />
+    );
+  }
 
   const spread = (selectedPoint.upper - selectedPoint.lower).toFixed(1);
   const halfSpread = (Number(spread) / 2).toFixed(1);
@@ -125,10 +181,6 @@ export function Forecast() {
                   key={h}
                   onClick={() => {
                     setHorizon(h);
-                    const newData = getForecastForHorizon(h);
-                    if (!newData.some((p) => p.hour === selectedHour)) {
-                      setSelectedHour(newData[Math.min(18, newData.length - 1)].hour);
-                    }
                   }}
                   className={`segmented-button min-w-[64px] ${isActive ? "segmented-button-active" : ""}`}
                 >
@@ -229,7 +281,7 @@ export function Forecast() {
               <p className="eyebrow">{horizon.toUpperCase()} Solar Curve</p>
               <span className="flex items-center gap-1 text-[11px] font-medium text-slate-500">
                 <Clock3 size={12} className="text-slate-400" />
-                Live Telemetry: 15:00 NOW
+                Telemetry replay: {activeData[0]?.fullTimeLabel ?? "—"}
               </span>
             </div>
             <h2 className="text-sm font-semibold text-grid-ink">
@@ -444,7 +496,7 @@ export function Forecast() {
                 </span>
               </div>
 
-              {selectedPoint.historical !== undefined && (
+              {typeof selectedPoint.historical === "number" && (
                 <p className="mt-2 flex justify-between border-t border-[#d6e7dd] pt-1.5 text-xs text-slate-600">
                   <span>Measured Actual:</span>
                   <span className="font-semibold text-slate-800">{selectedPoint.historical.toFixed(1)} MW</span>
@@ -649,7 +701,7 @@ export function Forecast() {
                             {pt.fullTimeLabel || pt.hour}
                           </td>
                           <td className="py-1.5 px-3">
-                            {pt.historical !== undefined ? (
+                            {typeof pt.historical === "number" ? (
                               <span className="rounded bg-slate-100 text-slate-700 px-1.5 py-0.5 text-[10px] font-medium">
                                 Actual
                               </span>
@@ -702,6 +754,38 @@ export function Forecast() {
 }
 
 /* ─── Sub-components ─────────────────────────────────────────────── */
+
+function getForecastSummary(data: ForecastPoint[]) {
+  const totalProjectedMwh = data.reduce((sum, point) => sum + point.expected, 0);
+  const totalDemandMwh = data.reduce((sum, point) => sum + point.demand, 0);
+  const peak = data.reduce<ForecastPoint | undefined>((currentPeak, point) =>
+    !currentPeak || point.expected > currentPeak.expected ? point : currentPeak, undefined);
+  const deficits = data.map((point) => point.demand - point.expected).filter((deficit) => deficit > 0);
+  const confidencePoints = data.filter((point) => point.confidenceScore !== undefined);
+
+  return {
+    totalProjectedMwh: Number(totalProjectedMwh.toFixed(1)),
+    totalDemandMwh: Number(totalDemandMwh.toFixed(1)),
+    peakGenerationMw: Number((peak?.expected ?? 0).toFixed(1)),
+    peakHour: peak?.fullTimeLabel ?? peak?.hour ?? "—",
+    avgConfidenceScore: confidencePoints.length
+      ? Math.round(confidencePoints.reduce((sum, point) => sum + (point.confidenceScore ?? 0), 0) / confidencePoints.length)
+      : 0,
+    maxDeficitMw: Number((deficits.length ? Math.max(...deficits) : 0).toFixed(1)),
+    highRiskHoursCount: data.filter((point) => point.risk === "HIGH" && point.demand > point.expected).length,
+  };
+}
+
+function ForecastMessage({ title, detail, action }: { title: string; detail: string; action?: ReactNode }) {
+  return (
+    <section className="panel border-[#dfe7e1] bg-[#f9faf9] p-6 text-center">
+      <p className="eyebrow">Generation & risk forecast</p>
+      <h2 className="mt-2 text-lg font-bold text-grid-ink">{title}</h2>
+      <p className="mx-auto mt-2 max-w-lg text-sm text-grid-muted">{detail}</p>
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
+    </section>
+  );
+}
 
 function MetricRow({
   label,

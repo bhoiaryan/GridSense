@@ -1,8 +1,46 @@
+import { useEffect, useState } from "react";
 import { BatteryCharging, Factory, MapPin, ShieldCheck, Sun } from "lucide-react";
-import { site, systemStatus } from "../data/mockData";
 import { SystemStatus } from "../components/layout/SystemStatus";
+import { api } from "../services/api";
+import type { SiteInfo, SystemStatusItem } from "../types";
 
 export function Site() {
+  const [site, setSite] = useState<SiteInfo | null>(null);
+  const [systemStatus, setSystemStatus] = useState<SystemStatusItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+
+    Promise.all([api.getSite("solar-01"), api.getSystemStatus()])
+      .then(([siteResponse, statusResponse]) => {
+        if (!cancelled) {
+          setSite(siteResponse);
+          setSystemStatus(statusResponse);
+        }
+      })
+      .catch((requestError: unknown) => {
+        if (!cancelled) setError(requestError instanceof Error ? requestError.message : "Unable to load the site overview.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
+  if (isLoading) return <SiteMessage title="Loading site overview" detail="Retrieving live asset configuration and system health." />;
+
+  if (error || !site) {
+    return <SiteMessage title="Site overview unavailable" detail={error ?? "The gateway returned no site data."} action={<button className="button-primary" onClick={() => setReloadKey((key) => key + 1)}>Try again</button>} />;
+  }
+
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
       <section className="panel overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
@@ -39,6 +77,17 @@ export function Site() {
 
       <SystemStatus items={systemStatus} />
     </div>
+  );
+}
+
+function SiteMessage({ title, detail, action }: { title: string; detail: string; action?: React.ReactNode }) {
+  return (
+    <section className="panel border-[#dfe7e1] bg-[#f9faf9] p-6 text-center">
+      <p className="eyebrow">Site overview</p>
+      <h2 className="mt-2 text-lg font-bold text-grid-ink">{title}</h2>
+      <p className="mx-auto mt-2 max-w-lg text-sm text-grid-muted">{detail}</p>
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
+    </section>
   );
 }
 

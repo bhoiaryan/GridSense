@@ -3,7 +3,8 @@ import csv
 from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
-from ..schemas import SiteInfoSchema, ForecastPointSchema, ForecastResponseSchema, RiskEventSchema
+from ..schemas import SiteInfoSchema, ForecastPointSchema, ForecastResponseSchema, KpiSchema, RiskEventSchema
+from .ml_engine_client import get_model_forecast, get_model_intelligence
 
 DATASET_DIR = Path(__file__).resolve().parent.parent.parent.parent / "dataset" / "gridsense_data"
 
@@ -20,6 +21,16 @@ def get_all_sites() -> List[SiteInfoSchema]:
                 bat_power = float(row.get("battery_max_power_mw", 20))
                 backup_cap = float(row.get("backup_capacity_mw", 15))
                 site_id = row.get("site_id", "SITE_001")
+
+                model_intelligence = get_model_intelligence(site_id)
+                if model_intelligence and isinstance(model_intelligence.get("site"), dict):
+                    try:
+                        sites.append(SiteInfoSchema(**model_intelligence["site"]))
+                        continue
+                    except (TypeError, ValueError):
+                        # Retain a data-pack fallback for a single malformed or
+                        # unavailable engine response without hiding other sites.
+                        pass
                 
                 sites.append(SiteInfoSchema(
                     id=site_id,
@@ -56,6 +67,10 @@ def get_all_sites() -> List[SiteInfoSchema]:
 def get_site_by_id(site_id: str) -> Optional[SiteInfoSchema]:
     # Alias handling
     target_id = "SITE_001" if site_id in ("solar-01", "SITE_001") else site_id
+    model_intelligence = get_model_intelligence(target_id)
+    if model_intelligence and isinstance(model_intelligence.get("site"), dict):
+        return SiteInfoSchema(**model_intelligence["site"])
+
     sites = get_all_sites()
     for s in sites:
         if s.id == target_id:
@@ -69,6 +84,21 @@ def get_forecast_points(site_id: str, hours: int = 24) -> ForecastResponseSchema
     forecast_path = DATASET_DIR / "demo" / "forecast_72h.csv"
     points: List[ForecastPointSchema] = []
     valid_hours = hours if hours in (24, 48, 72) else 24
+
+    model_forecast = get_model_forecast(site_id, valid_hours)
+    if model_forecast:
+        try:
+            model_points = [ForecastPointSchema(**point) for point in model_forecast.get("forecast", [])]
+            if len(model_points) == valid_hours:
+                return ForecastResponseSchema(
+                    site_id=site_id,
+                    horizon_hours=valid_hours,
+                    total_points=len(model_points),
+                    forecast=model_points,
+                )
+        except (TypeError, ValueError):
+            # Preserve the demo CSV fallback when model output is malformed or unavailable.
+            pass
     
     if forecast_path.exists():
         with open(forecast_path, mode="r", encoding="utf-8") as f:
@@ -132,6 +162,14 @@ def get_forecast_points(site_id: str, hours: int = 24) -> ForecastResponseSchema
     )
 
 def get_risk_events(site_id: str) -> List[RiskEventSchema]:
+    target_id = "SITE_001" if site_id == "solar-01" else site_id
+    model_intelligence = get_model_intelligence(target_id)
+    if model_intelligence:
+        try:
+            return [RiskEventSchema(**event) for event in model_intelligence.get("riskEvents", [])]
+        except (TypeError, ValueError):
+            pass
+
     return [
         RiskEventSchema(
             id="risk-evt-01",
@@ -150,4 +188,14 @@ def get_risk_events(site_id: str) -> List[RiskEventSchema]:
             problem="High variance in localized irradiance forecast requiring spinning reserve readiness.",
         ),
     ]
+
+def get_dashboard_kpis(site_id: str) -> List[KpiSchema]:
+    target_id = "SITE_001" if site_id == "solar-01" else site_id
+    model_intelligence = get_model_intelligence(target_id)
+    if model_intelligence:
+        try:
+            return [KpiSchema(**kpi) for kpi in model_intelligence.get("kpis", [])]
+        except (TypeError, ValueError):
+            pass
+    return []
 

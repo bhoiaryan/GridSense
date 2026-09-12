@@ -5,6 +5,7 @@ from typing import List, Optional
 from .schemas import (
     SiteInfoSchema,
     ForecastResponseSchema,
+    KpiSchema,
     RiskEventSchema,
     RecommendationSchema,
     ScenarioInputSchema,
@@ -51,6 +52,10 @@ def get_site(site_id: str):
 @app.get("/api/forecast/{site_id}", response_model=ForecastResponseSchema)
 def get_forecast(site_id: str, hours: int = Query(default=24, ge=24, le=72)):
     return data_loader.get_forecast_points(site_id, hours)
+
+@app.get("/api/dashboard/{site_id}/kpis", response_model=List[KpiSchema])
+def get_dashboard_kpis(site_id: str):
+    return data_loader.get_dashboard_kpis(site_id)
 
 @app.get("/api/events/{site_id}", response_model=List[RiskEventSchema])
 def get_events(site_id: str):

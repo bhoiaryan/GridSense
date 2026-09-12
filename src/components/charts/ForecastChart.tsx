@@ -297,7 +297,7 @@ function CustomForecastTooltip({ active, payload, canInspect }: ForecastTooltipP
       </div>
 
       <div className="space-y-1.5">
-        {data.historical !== undefined && (
+        {typeof data.historical === "number" && (
           <div className="flex items-center justify-between">
             <span className="text-slate-500">Historical measured:</span>
             <span className="font-semibold text-slate-700">{data.historical.toFixed(1)} MW</span>

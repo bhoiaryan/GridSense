@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import { MockDataService } from "../services/mockDataService.js";
+import { env } from "../config/env.js";
 import { mlClient } from "../services/mlClient.js";
 import { resolveSiteId } from "../utils/siteResolver.js";
 
@@ -22,9 +23,10 @@ router.get("/dashboard/:site_id", async (req: Request, res: Response) =>
     if (mlHealth.status === "connected")
     {
       // Parallel fetch from ML Service
-      const [site, forecastRes, riskEvents, recommendation, systemStatus] = await Promise.all([
+      const [site, forecastRes, kpis, riskEvents, recommendation, systemStatus] = await Promise.all([
         mlClient.getSiteById(siteId),
         mlClient.getForecast(siteId, 24),
+        mlClient.getDashboardKpis(siteId),
         mlClient.getRiskEvents(siteId),
         mlClient.getRecommendation(siteId),
         mlClient.getSystemStatus(),
@@ -37,7 +39,7 @@ router.get("/dashboard/:site_id", async (req: Request, res: Response) =>
 
       return res.json({
         site,
-        kpis: MockDataService.getKpis(),
+        kpis,
         currentForecast: forecastRes.forecast,
         riskEvents,
         recommendation,
@@ -49,14 +51,26 @@ router.get("/dashboard/:site_id", async (req: Request, res: Response) =>
       });
     }
 
-    // Otherwise use graceful mock data
-    const dashboardPayload = MockDataService.getDashboard(siteId);
-    return res.json(dashboardPayload);
+    if (env.USE_MOCK_FALLBACK)
+    {
+      return res.json(MockDataService.getDashboard(siteId));
+    }
+
+    return res.status(503).json({
+      error: "ML service unavailable. Dashboard data cannot be generated.",
+      details: mlHealth.error,
+    });
   } catch (error: any)
   {
     console.error("[Dashboard] Error building dashboard response:", error);
-    // Fallback to mock data on unhandled error to maintain dashboard availability
-    return res.json(MockDataService.getDashboard(siteId));
+    if (env.USE_MOCK_FALLBACK)
+    {
+      return res.json(MockDataService.getDashboard(siteId));
+    }
+    return res.status(502).json({
+      error: "ML service request failed. Dashboard data cannot be generated.",
+      details: error?.message,
+    });
   }
 });
 

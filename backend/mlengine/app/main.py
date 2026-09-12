@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from app.api.decision import router as decision_router
+from app.api.forecast import router as forecast_router
 from app.api.health import router as health_router
+from app.api.intelligence import router as intelligence_router
 from app.api.risk import router as risk_router
+from app.api.scenario import router as scenario_router
 from app.api.simulation import router as simulation_router
 
 app = FastAPI(
@@ -11,8 +14,11 @@ app = FastAPI(
 )
 
 app.include_router(health_router, prefix="/api")
+app.include_router(forecast_router, prefix="/api")
+app.include_router(intelligence_router, prefix="/api")
 app.include_router(risk_router, prefix="/api")
 app.include_router(decision_router, prefix="/api")
 app.include_router(simulation_router, prefix="/api")
+app.include_router(scenario_router, prefix="/api")
 
 

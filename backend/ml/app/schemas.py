@@ -41,6 +41,13 @@ class ForecastResponseSchema(BaseModel):
     total_points: int
     forecast: List[ForecastPointSchema]
 
+class KpiSchema(BaseModel):
+    label: str
+    value: str
+    detail: str
+    trend: str
+    status: str = "OK"
+
 class RiskEventSchema(BaseModel):
     id: str
     risk: str

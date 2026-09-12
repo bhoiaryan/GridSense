@@ -9,7 +9,7 @@ export interface ForecastPoint {
   timestamp: string;
   dayLabel?: string;
   fullTimeLabel?: string;
-  historical?: number;
+  historical?: number | null;
   expected: number;
   lower: number;
   upper: number;
@@ -83,4 +83,42 @@ export interface SiteInfo {
   dischargeLimitMw: number;
   backupAvailable: boolean;
   backupCapacityMw: number;
+}
+
+export interface ForecastResponse {
+  site_id: string;
+  horizon_hours: number;
+  total_points: number;
+  forecast: ForecastPoint[];
+}
+
+export interface DashboardResponse {
+  site: SiteInfo;
+  kpis: Kpi[];
+  currentForecast: ForecastPoint[];
+  riskEvents: RiskEvent[];
+  recommendation: Recommendation;
+  systemStatus: SystemStatusItem[];
+  meta: {
+    source: string;
+    timestamp: string;
+  };
+}
+
+export interface GatewayHealth {
+  status: "ok";
+  gateway: "operational";
+  service: string;
+  timestamp: string;
+  ml_service: {
+    status: "connected" | "offline";
+    details: string;
+  };
+}
+
+export interface RiskSummary {
+  site_id: string;
+  overall_risk: RiskLevel;
+  active_events_count: number;
+  events: RiskEvent[];
 }

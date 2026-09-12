@@ -34,7 +34,7 @@ class RiskService:
         self._cached_features: Optional[pd.DataFrame] = None
         self._cached_ops: Optional[pd.DataFrame] = None
 
-    def _load_data_cache(self) -> Tuple_Data:
+    def _load_data_cache(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Load and cache processed features and operations datasets."""
         if self._cached_features is None:
             self._cached_features = load_processed_features()

@@ -10,7 +10,7 @@ const envSchema = z.object({
   USE_MOCK_FALLBACK: z
     .string()
     .transform((val) => val === "true" || val === "1")
-    .default("true"),
+    .default("false"),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
 });
 
