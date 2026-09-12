@@ -286,10 +286,10 @@ function CustomForecastTooltip({ active, payload, canInspect }: ForecastTooltipP
         <span
           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
             data.risk === "HIGH"
-              ? "bg-red-100 text-red-700 border border-red-200"
+              ? "bg-[#fff1f0] text-[#9b3f42] border border-[#ebd5d2]"
               : data.risk === "MEDIUM"
-                ? "bg-amber-100 text-amber-700 border border-amber-200"
-                : "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                ? "bg-[#f9f1e5] text-[#7d6944] border border-[#e5d9c2]"
+                : "bg-[#eef8f2] text-[#386c58] border border-[#d6e7dd]"
           }`}
         >
           {data.risk} RISK
@@ -306,24 +306,24 @@ function CustomForecastTooltip({ active, payload, canInspect }: ForecastTooltipP
 
         <div className="flex items-center justify-between">
           <span className="text-slate-600 font-medium">Expected forecast:</span>
-          <span className="font-bold text-teal-700 text-sm">{data.expected.toFixed(1)} MW</span>
+          <span className="font-bold text-[#386c58] text-sm">{data.expected.toFixed(1)} MW</span>
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-slate-500">Forecast range (P10-P90):</span>
-          <span className="font-semibold text-amber-700">
+          <span className="font-semibold text-[#7d6944]">
             {data.lower.toFixed(1)} - {data.upper.toFixed(1)} MW (±{(Number(spread) / 2).toFixed(1)})
           </span>
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-slate-500">Grid demand requirement:</span>
-          <span className="font-semibold text-red-600">{data.demand.toFixed(1)} MW</span>
+          <span className="font-semibold text-[#9b3f42]">{data.demand.toFixed(1)} MW</span>
         </div>
 
         <div className="flex items-center justify-between pt-1 border-t border-slate-100">
           <span className="text-slate-600">Net balance:</span>
-          <span className={`font-bold ${isShortfall ? "text-red-600" : "text-emerald-600"}`}>
+          <span className={`font-bold ${isShortfall ? "text-[#9b3f42]" : "text-[#386c58]"}`}>
             {isShortfall ? `${netBalance} MW Deficit` : `+${netBalance} MW Surplus`}
           </span>
         </div>

@@ -18,17 +18,51 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background-color: #edf4f0;
+  background:
+    radial-gradient(circle at top left, rgba(122, 146, 132, 0.12), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(105, 120, 110, 0.08), transparent 24%),
+    linear-gradient(180deg, #f5f8f6 0%, #edf4f0 100%);
+}
+
+#root {
+  min-height: 100vh;
 }
 
 button,
 input,
 select {
   font: inherit;
+}
+
+::selection {
+  background: rgba(5, 150, 105, 0.2);
+  color: #0c2419;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(15, 118, 110, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 118, 110, 0.5);
 }
 
 @layer components {
@@ -43,11 +77,11 @@ select {
   }
 
   .dashboard-risk-surface {
-    @apply border-red-500 bg-white;
+    @apply border-[#e9d0ce] bg-[#fff8f7];
   }
 
   .dashboard-action-surface {
-    @apply border-emerald-600 bg-white;
+    @apply border-[#d6e7dd] bg-[#f5faf6];
   }
 
   .dashboard-chart-surface {
@@ -86,11 +120,11 @@ select {
 
   /* ─── Buttons ───────────────────────────────────────────────────── */
   .button-primary {
-    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-grid-teal px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-150 ease-out hover:bg-emerald-800 active:translate-y-px focus:outline-none focus:ring-2 focus:ring-emerald-600/40 focus:ring-offset-2;
+    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-[#1f5b4b] px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-150 ease-out hover:bg-[#1a4f42] active:translate-y-px focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:ring-offset-2;
   }
 
   .button-secondary {
-    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-grid-line bg-white px-4 py-2 text-sm font-semibold text-grid-ink transition duration-150 ease-out hover:border-emerald-300 hover:bg-emerald-50/40 active:translate-y-px focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:ring-offset-2;
+    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-[#dfe7e1] bg-white px-4 py-2 text-sm font-semibold text-grid-ink transition duration-150 ease-out hover:border-[#bfd0c4] hover:bg-[#f3f8f5] active:translate-y-px focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:ring-offset-2;
   }
 
   /* ─── Form Inputs ───────────────────────────────────────────────── */
@@ -121,19 +155,19 @@ select {
   }
 
   .layer-toggle-amber {
-    @apply border-amber-300 bg-amber-50 text-amber-900;
+    @apply border-[#e5d9c2] bg-[#f9f1e5] text-[#6d5d3e];
   }
 
   .layer-toggle-red {
-    @apply border-red-300 bg-red-50 text-red-800;
+    @apply border-[#e9d0ce] bg-[#fff1f0] text-[#7d3432];
   }
 
   .layer-toggle-rose {
-    @apply border-rose-300 bg-rose-50 text-rose-800;
+    @apply border-[#edd3d6] bg-[#fff3f5] text-[#7a4951];
   }
 
   .layer-toggle-amber-bold {
-    @apply border-amber-400 bg-amber-100 text-amber-950 font-bold;
+    @apply border-[#d7c09d] bg-[#f4e7d1] text-[#58472f] font-bold;
   }
 
   /* ─── Small UI Elements ─────────────────────────────────────────── */

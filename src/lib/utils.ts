@@ -8,14 +8,14 @@ export function cn(...inputs: ClassValue[]) {
 
 export function riskClassName(risk: RiskLevel) {
   if (risk === "HIGH") {
-    return "border-red-200 bg-red-50 text-grid-red";
+    return "border-[#e9d0ce] bg-[#fff1f0] text-[#9b3f42]";
   }
 
   if (risk === "MEDIUM") {
-    return "border-amber-200 bg-amber-50 text-grid-amber";
+    return "border-[#e5d9c2] bg-[#f9f1e5] text-[#7d6944]";
   }
 
-  return "border-emerald-200 bg-emerald-50 text-grid-green";
+  return "border-[#d6e7dd] bg-[#eef8f2] text-[#386c58]";
 }
 
 export function formatMw(value: number) {
