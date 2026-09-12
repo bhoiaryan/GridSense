@@ -7,8 +7,8 @@ export function Simulator() {
 
   return (
     <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
-      <section className="panel">
-        <div className="panel-header">
+      <section className="panel overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
+        <div className="panel-header bg-[#f3f7f4]">
           <div>
             <p className="eyebrow">Scenario controls</p>
             <h2 className="mt-1 text-base font-semibold text-grid-ink">Modify operating assumptions</h2>
@@ -40,8 +40,8 @@ export function Simulator() {
         </div>
       </section>
 
-      <section className="panel">
-        <div className="panel-header">
+      <section className="panel overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
+        <div className="panel-header bg-[#f3f7f4]">
           <div>
             <p className="eyebrow">Scenario results</p>
             <h2 className="mt-1 text-base font-semibold text-grid-ink">Baseline vs scenario</h2>
@@ -52,7 +52,7 @@ export function Simulator() {
             <ResultCard title="Baseline" generation={baseline.generationMw} shortfall={baseline.shortfallMwh} risk={baseline.risk} recommendation={baseline.recommendation} />
             <ResultCard title="Scenario" generation={result.generationMw} shortfall={result.shortfallMwh} risk={result.risk} recommendation={result.recommendation} />
           </div>
-          <div className="mt-5 rounded-lg border border-grid-line bg-slate-50/50 p-4">
+          <div className="mt-5 rounded-lg border border-[#dfe7e1] bg-[#f3f7f4] p-4">
             <p className="eyebrow">Why did the recommendation change?</p>
             <p className="mt-2 text-sm leading-6 text-grid-ink">{result.explanation}</p>
           </div>
@@ -76,16 +76,16 @@ function Slider({ label, value, suffix, min, max, onChange }: { label: string; v
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className="flex items-center justify-between rounded-md border border-grid-line bg-slate-50/50 px-3 py-2.5">
+    <label className="flex items-center justify-between rounded-xl border border-[#dfe7e1] bg-[#f3f7f4] px-3 py-2.5">
       <span className="text-sm font-semibold text-grid-ink">{label}</span>
-      <input className="h-4 w-4 accent-grid-teal" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+      <input className="h-4 w-4 accent-[#1f5b4b]" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
     </label>
   );
 }
 
 function ResultCard({ title, generation, shortfall, risk, recommendation }: { title: string; generation: number; shortfall: number; risk: "LOW" | "MEDIUM" | "HIGH"; recommendation: string }) {
   return (
-    <article className="rounded-lg border border-grid-line bg-white p-4">
+    <article className="rounded-xl border border-[#dfe7e1] bg-white p-4 shadow-sm shadow-slate-200/30">
       <div className="flex items-start justify-between">
         <h3 className="text-base font-semibold text-grid-ink">{title}</h3>
         <RiskBadge risk={risk} />
@@ -94,7 +94,7 @@ function ResultCard({ title, generation, shortfall, risk, recommendation }: { ti
         <Metric label="Avg generation" value={`${generation.toFixed(1)} MW`} />
         <Metric label="Shortfall" value={`${shortfall.toFixed(1)} MWh`} />
       </div>
-      <p className="mt-4 rounded-md border border-grid-line bg-slate-50/50 p-3 text-sm font-semibold text-grid-ink">{recommendation}</p>
+      <p className="mt-4 rounded-xl border border-[#dfe7e1] bg-[#f3f7f4] p-3 text-sm font-semibold text-grid-ink">{recommendation}</p>
     </article>
   );
 }

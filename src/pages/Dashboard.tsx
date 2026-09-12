@@ -40,88 +40,114 @@ export function Dashboard() {
   return (
     <div className="space-y-4">
       {/* ─── Current Status ──────────────────────────────────────── */}
-      <section aria-labelledby="current-status-title" className="panel dashboard-status-surface overflow-hidden">
-        <div className="flex flex-col gap-2 border-b border-grid-line bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <section aria-labelledby="current-status-title" className="panel overflow-hidden border-[#dfe9e1] bg-[#f7faf7] shadow-[0_12px_24px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-col gap-2 border-b border-[#dfe9e1] bg-[#f3f7f4] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <p className="eyebrow">Current Status</p>
               <span className="text-[11px] text-grid-muted">Telemetry ingest: 15:00 NOW</span>
             </div>
-            <h2 id="current-status-title" className="text-base font-bold text-grid-ink mt-0.5">
+            <h2 id="current-status-title" className="mt-0.5 text-base font-bold text-grid-ink">
               {site.name} <span className="text-xs font-normal text-grid-muted">({site.location} · {site.capacityMw} MW PV)</span>
             </h2>
           </div>
-          <div className="flex items-center gap-1.5 self-start sm:self-auto rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+          <div className="flex items-center gap-1.5 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 sm:self-auto">
             <span className="state-dot bg-emerald-500" />
             Live
           </div>
         </div>
 
-        <dl className="grid divide-y divide-grid-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          <StatusMetric icon={Sun} label="Generation" value={generation.value} detail={generation.detail} tone="sun" />
-          <StatusMetric icon={BatteryCharging} label="Battery" value={battery.value} detail={battery.trend} tone="battery" />
-          <StatusMetric
-            icon={ShieldCheck}
-            label="Backup"
-            value={site.backupAvailable ? "Ready" : "Offline"}
-            detail={`${site.backupCapacityMw} MW capacity`}
-            tone={site.backupAvailable ? "backup" : "risk"}
-          />
-        </dl>
+        <div className="p-3.5">
+          <div className="mb-3 grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-[#dfeae1] bg-[#edf5ef] p-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#536b5a]">Net load</p>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <span className="text-lg font-bold text-grid-ink">48.2 MW</span>
+                <span className="text-[10px] font-semibold text-[#3d6d52]">+8.1%</span>
+              </div>
+            </div>
+            <div className="rounded-xl border border-[#dde6ec] bg-[#f3f5f7] p-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5f6d7a]">Battery reserve</p>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <span className="text-lg font-bold text-grid-ink">68% SOC</span>
+                <span className="text-[10px] font-semibold text-[#5a6d7d]">22 MW</span>
+              </div>
+            </div>
+            <div className="rounded-xl border border-[#e8dfd2] bg-[#f5f1ea] p-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6a5c47]">Forecast stability</p>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <span className="text-lg font-bold text-grid-ink">89%</span>
+                <span className="text-[10px] font-semibold text-[#6c5b47]">High</span>
+              </div>
+            </div>
+          </div>
+
+          <dl className="grid gap-3 divide-y divide-[#dfe7e1] rounded-2xl border border-[#dfe7e1] bg-white/80 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <StatusMetric icon={Sun} label="Generation" value={generation.value} detail={generation.detail} tone="sun" />
+            <StatusMetric icon={BatteryCharging} label="Battery" value={battery.value} detail={battery.trend} tone="battery" />
+            <StatusMetric
+              icon={ShieldCheck}
+              label="Backup"
+              value={site.backupAvailable ? "Ready" : "Offline"}
+              detail={`${site.backupCapacityMw} MW capacity`}
+              tone={site.backupAvailable ? "backup" : "risk"}
+            />
+          </dl>
+        </div>
       </section>
 
       {/* ─── Risk + Recommended Action ───────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Risk Card */}
-        <section aria-labelledby="risk-title" className="panel dashboard-risk-surface overflow-hidden p-3.5 sm:p-4 flex flex-col justify-between">
+        <section aria-labelledby="risk-title" className="panel dashboard-risk-surface flex flex-col justify-between overflow-hidden bg-[#fff8f7] p-3.5 sm:p-4">
           <div>
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md border border-red-200 bg-red-50 text-red-600">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e9d0ce] bg-[#fff1f0] text-[#b54847] shadow-sm">
                   <AlertTriangle size={15} />
                 </span>
-                <span className="eyebrow text-red-700">Identified Risk</span>
+                <span className="eyebrow text-[#a64a47]">Identified Risk</span>
               </div>
               <RiskBadge risk={primaryRisk.risk} />
             </div>
 
-            <h3 id="risk-title" className="mt-2 text-sm font-bold text-red-950">
+            <h3 id="risk-title" className="mt-3 text-sm font-bold text-[#7d3432]">
               Potential Evening Shortfall
             </h3>
 
-            <div className="mt-2.5 rounded-md bg-red-50/60 border border-red-200 p-2.5 text-xs space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-red-800/80 font-medium">Window:</span>
-                <span className="font-bold text-red-950">{primaryRisk.window}</span>
+            <div className="mt-3 space-y-2 rounded-2xl border border-[#ebd5d2] bg-[#fff1f0] p-3 text-xs">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium text-[#8a4946]">Window:</span>
+                <span className="font-bold text-[#5d2b29]">{primaryRisk.window}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-red-800/80 font-medium">Expected Impact:</span>
-                <span className="font-bold text-red-700">{primaryRisk.expectedImpact}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium text-[#8a4946]">Expected Impact:</span>
+                <span className="font-bold text-[#9b3f42]">{primaryRisk.expectedImpact}</span>
               </div>
             </div>
           </div>
 
-          <p className="mt-3 text-[11px] text-red-800/80 font-medium">
+          <p className="mt-3 text-[11px] font-medium text-[#8a4946]">
             Solar generation declines while feeder demand peaks.
           </p>
         </section>
 
         {/* Recommended Action Card */}
-        <section aria-labelledby="recommended-action-title" className="panel dashboard-action-surface overflow-hidden p-3.5 sm:p-4 flex flex-col justify-between">
+        <section aria-labelledby="recommended-action-title" className="panel dashboard-action-surface flex flex-col justify-between overflow-hidden bg-[#f5faf6] p-3.5 sm:p-4">
           <div>
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md border border-teal-200 bg-teal-50 text-teal-700">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#d6e7dd] bg-[#eef8f2] text-[#3e6d57] shadow-sm">
                   <Zap size={15} />
                 </span>
-                <span className="eyebrow text-teal-700">Recommended Action</span>
+                <span className="eyebrow text-[#3e6d57]">Recommended Action</span>
               </div>
-              <span className="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded">
+              <span className="rounded-full border border-[#d6e7dd] bg-[#eef8f2] px-2 py-0.5 text-[10px] font-bold text-[#396553]">
                 Automated Policy
               </span>
             </div>
 
-            <h3 id="recommended-action-title" className="mt-2 text-sm font-bold text-grid-ink">
+            <h3 id="recommended-action-title" className="mt-3 text-sm font-bold text-grid-ink">
               {recommendation.action}
             </h3>
             <p className="mt-1 text-xs leading-relaxed text-grid-muted">
@@ -129,11 +155,11 @@ export function Dashboard() {
             </p>
           </div>
 
-          <div className="mt-3 flex items-center justify-between border-t border-teal-100 pt-2.5">
-            <span className="text-[11px] text-grid-muted font-medium">
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#dfece3] pt-2.5">
+            <span className="text-[11px] font-medium text-grid-muted">
               {recommendation.constraints[0]}
             </span>
-            <Link className="button-primary min-h-7 py-1 px-3 text-xs" to="/simulator">
+            <Link className="button-primary min-h-7 px-3 py-1 text-xs" to="/simulator">
               Run What-If Scenario <ArrowRight size={13} />
             </Link>
           </div>
@@ -141,8 +167,8 @@ export function Dashboard() {
       </div>
 
       {/* ─── Generation Trend Chart ──────────────────────────────── */}
-      <section aria-labelledby="generation-trend-title" className="panel dashboard-chart-surface min-w-0">
-        <div className="panel-header flex-col gap-3 sm:flex-row sm:items-center justify-between">
+      <section aria-labelledby="generation-trend-title" className="panel dashboard-chart-surface min-w-0 overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
+        <div className="panel-header flex-col gap-3 bg-[#f3f7f4] sm:flex-row sm:items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
               <p className="eyebrow">Generation Trend</p>
@@ -206,26 +232,28 @@ export function Dashboard() {
       </section>
 
       {/* ─── System Health ───────────────────────────────────────── */}
-      <section aria-labelledby="system-health-title" className="panel dashboard-health-surface">
-        <div className="panel-header py-2.5 px-4">
+      <section aria-labelledby="system-health-title" className="panel dashboard-health-surface overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
+        <div className="panel-header bg-[#f3f7f4] py-2.5 px-4">
           <div>
             <p className="eyebrow">System Status</p>
             <h2 id="system-health-title" className="text-sm font-semibold text-grid-ink">
               Core Subsystems & Telemetry Ingestion
             </h2>
           </div>
-          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
             All 4 Services Operational
           </span>
         </div>
 
-        <div className="p-3.5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-2.5 p-3.5 sm:grid-cols-2 lg:grid-cols-4">
           {systemStatus.map((item) => (
-            <div key={item.label} className="rounded-md border border-grid-line bg-slate-50/60 p-2.5 flex items-center gap-2.5">
-              <CheckCircle2 size={15} className="shrink-0 text-emerald-600" />
+            <div key={item.label} className="flex items-center gap-2.5 rounded-2xl border border-grid-line bg-white/80 p-2.5 shadow-sm shadow-slate-200/40">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <CheckCircle2 size={15} className="shrink-0" />
+              </span>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate">{item.label}</p>
-                <p className="text-xs font-bold text-grid-ink truncate">{item.status}</p>
+                <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-500">{item.label}</p>
+                <p className="truncate text-xs font-bold text-grid-ink">{item.status}</p>
               </div>
             </div>
           ))}
@@ -242,23 +270,25 @@ function StatusMetric({
   label,
   value,
   detail,
-  tone
+  tone,
+  className
 }: {
   icon: typeof Sun;
   label: string;
   value: string;
   detail: string;
   tone: "sun" | "battery" | "backup" | "risk";
+  className?: string;
 }) {
   const iconStyle = {
-    sun: "border-amber-200 bg-amber-50 text-amber-600",
-    battery: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    backup: "border-blue-200 bg-blue-50 text-blue-600",
-    risk: "border-red-200 bg-red-50 text-grid-red"
+    sun: "border-[#e6ddd0] bg-[#f6f0e6] text-[#6f5d39]",
+    battery: "border-[#dfeae1] bg-[#edf8f1] text-[#3e6d57]",
+    backup: "border-[#dfe5ea] bg-[#f1f5f8] text-[#4f6475]",
+    risk: "border-[#ebd5d2] bg-[#fff1f0] text-[#a34d49]"
   }[tone];
 
   return (
-    <div className="flex items-start gap-3 p-3.5 sm:p-4 transition-colors duration-150 hover:bg-slate-50/50">
+    <div className={`flex items-start gap-3 p-3.5 sm:p-4 transition-colors duration-150 hover:bg-slate-50/50 ${className ?? ""}`}>
       <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border ${iconStyle}`}>
         <Icon size={15} />
       </span>
@@ -301,7 +331,7 @@ function LayerToggle({
       aria-pressed={active}
       className={`layer-toggle ${active ? activeClass : "layer-toggle-inactive"}`}
     >
-      <span className={`state-dot ${active ? (tone === "amber" ? "bg-amber-500" : "bg-red-500") : "bg-slate-300"}`} />
+      <span className={`state-dot ${active ? (tone === "amber" ? "bg-[#b98d4f]" : "bg-[#9b3f42]") : "bg-slate-300"}`} />
       {label}
     </button>
   );

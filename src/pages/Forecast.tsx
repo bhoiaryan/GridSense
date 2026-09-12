@@ -101,13 +101,13 @@ export function Forecast() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d6e7dd] bg-[#eef8f2] px-2 py-0.5 text-[11px] font-semibold text-[#386c58]">
               <Sun size={13} />
               {site.name} ({site.capacityMw} MW PV)
             </span>
             <span className="text-[11px] text-grid-muted">Model: XGBoost Ensemble + GHI Inversion</span>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-grid-ink mt-1">
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-grid-ink">
             Generation & Risk Forecast
           </h1>
         </div>
@@ -144,12 +144,12 @@ export function Forecast() {
       </div>
 
       {/* ─── 2. COMPACT FORECAST OVERVIEW STRIP ─────────────────────── */}
-      <section className="panel p-3.5 sm:p-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:divide-x sm:divide-grid-line">
+      <section className="panel border-[#dfe7e1] bg-[#f9faf9] p-3.5 sm:p-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:divide-x sm:divide-[#dfe7e1]">
           {/* Expected Generation */}
           <div className="space-y-1 sm:px-3 first:pl-0">
             <p className="metric-label flex items-center gap-1">
-              <Zap size={13} className="text-teal-700" />
+              <Zap size={13} className="text-[#396553]" />
               Projected Generation
             </p>
             <p className="text-lg font-bold text-grid-ink">
@@ -163,7 +163,7 @@ export function Forecast() {
           {/* Peak Generation */}
           <div className="space-y-1 sm:px-3">
             <p className="metric-label flex items-center gap-1">
-              <Sun size={13} className="text-amber-600" />
+              <Sun size={13} className="text-[#7d6944]" />
               Peak Generation
             </p>
             <p className="text-lg font-bold text-grid-ink">
@@ -177,7 +177,7 @@ export function Forecast() {
           {/* Forecast Confidence */}
           <div className="space-y-1 sm:px-3">
             <p className="metric-label flex items-center gap-1">
-              <Percent size={13} className="text-emerald-700" />
+              <Percent size={13} className="text-[#386c58]" />
               Overall Confidence
             </p>
             <p className="text-lg font-bold text-grid-ink">
@@ -192,27 +192,27 @@ export function Forecast() {
           <div className="space-y-1 sm:px-3 last:pr-0">
             <p className="metric-label flex items-center gap-1">
               {summary.maxDeficitMw > 0 ? (
-                <TrendingDown size={13} className="text-red-600" />
+                <TrendingDown size={13} className="text-[#9b3f42]" />
               ) : (
-                <CheckCircle2 size={13} className="text-emerald-600" />
+                <CheckCircle2 size={13} className="text-[#386c58]" />
               )}
               Risk Window Status
             </p>
             {summary.maxDeficitMw > 0 ? (
               <>
-                <p className="text-lg font-bold text-red-700">
-                  {summary.maxDeficitMw} <span className="text-xs font-semibold text-red-600">MW Shortfall</span>
+                <p className="text-lg font-bold text-[#9b3f42]">
+                  {summary.maxDeficitMw} <span className="text-xs font-semibold text-[#9b3f42]">MW Shortfall</span>
                 </p>
-                <p className="text-[11px] text-red-600/90 font-medium">
+                <p className="text-[11px] text-[#9b3f42] font-medium">
                   {summary.highRiskHoursCount} high-risk shortfall intervals
                 </p>
               </>
             ) : (
               <>
-                <p className="text-lg font-bold text-emerald-700">
+                <p className="text-lg font-bold text-[#386c58]">
                   Balanced
                 </p>
-                <p className="text-[11px] text-emerald-600 font-medium">
+                <p className="text-[11px] text-[#386c58] font-medium">
                   No high-risk shortfall expected
                 </p>
               </>
@@ -222,8 +222,8 @@ export function Forecast() {
       </section>
 
       {/* ─── 3. HERO FORECAST CHART ─────────────────────────────────── */}
-      <section className="panel">
-        <div className="panel-header flex-col gap-3 sm:flex-row sm:items-center justify-between">
+      <section className="panel overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
+        <div className="panel-header flex-col gap-3 bg-[#f3f7f4] sm:flex-row sm:items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
               <p className="eyebrow">{horizon.toUpperCase()} Solar Curve</p>
@@ -281,7 +281,7 @@ export function Forecast() {
                 className="button-secondary py-1 px-2 text-[11px] min-h-7"
                 title="Jump to current hour (15:00)"
               >
-                <Radio size={11} className="text-teal-700 animate-pulse" />
+                <Radio size={11} className="text-[#396553] animate-pulse" />
                 NOW (15:00)
               </button>
               <button
@@ -317,7 +317,7 @@ export function Forecast() {
               <span className="text-slate-400">·</span>
               <span>Expected: <strong className="text-grid-teal">{selectedPoint.expected.toFixed(1)} MW</strong></span>
               <span className="text-slate-400">·</span>
-              <span>Demand: <strong className="text-red-600">{selectedPoint.demand.toFixed(1)} MW</strong></span>
+              <span>Demand: <strong className="text-[#9b3f42]">{selectedPoint.demand.toFixed(1)} MW</strong></span>
             </div>
 
             <span className="text-[11px] text-slate-500 italic">
@@ -328,8 +328,8 @@ export function Forecast() {
       </section>
 
       {/* ─── 4. KEY FORECAST EVENTS (NO DUPLICATION) ────────────────── */}
-      <section className="panel">
-        <div className="panel-header">
+      <section className="panel overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
+        <div className="panel-header bg-[#f3f7f4]">
           <div>
             <p className="eyebrow">Key Forecast Events</p>
             <h2 className="text-sm font-semibold text-grid-ink">
@@ -349,10 +349,10 @@ export function Forecast() {
                 <div
                   key={period.id}
                   onClick={() => handleJumpToRisk(period.targetHour)}
-                  className={`cursor-pointer rounded-lg border p-3.5 transition text-left ${
+                  className={`cursor-pointer rounded-xl border p-3.5 transition text-left ${
                     isSelected
-                      ? "border-grid-teal bg-teal-50/50 ring-2 ring-teal-500/20 shadow-sm"
-                      : "border-grid-line bg-white hover:border-slate-300 hover:bg-slate-50/60"
+                      ? "border-[#bfd0c4] bg-[#edf8f2] ring-2 ring-[#d6e7dd] shadow-sm"
+                      : "border-[#dfe7e1] bg-white hover:border-[#bfd0c4] hover:bg-[#f4faf6]"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -365,10 +365,10 @@ export function Forecast() {
 
                   <h3 className="mt-2 text-sm font-bold text-grid-ink">{period.name}</h3>
 
-                  <div className="mt-2 rounded-md bg-slate-50/80 border border-grid-line p-2 text-xs">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">{period.metricLabel}:</span>
-                      <span className={`font-bold ${isShortfall ? "text-red-700" : "text-emerald-700"}`}>
+                  <div className="mt-2 rounded-xl border border-[#dfe7e1] bg-[#f3f7f4] p-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-slate-500">{period.metricLabel}:</span>
+                      <span className={`font-bold ${isShortfall ? "text-[#9b3f42]" : "text-[#386c58]"}`}>
                         {period.metricValue}
                       </span>
                     </div>
@@ -376,8 +376,8 @@ export function Forecast() {
                   </div>
 
                   <div className="mt-2.5 flex items-center justify-between text-[11px]">
-                    <span className="text-teal-700 font-semibold">{period.actionHint}</span>
-                    <ArrowRight size={13} className={isSelected ? "text-grid-teal" : "text-slate-400"} />
+                    <span className="font-semibold text-[#386c58]">{period.actionHint}</span>
+                    <ArrowRight size={13} className={isSelected ? "text-[#386c58]" : "text-slate-400"} />
                   </div>
                 </div>
               );
@@ -389,13 +389,13 @@ export function Forecast() {
       {/* ─── 5. FORECAST DETAILS & TIMESTAMP INSPECTOR ──────────────── */}
       <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
         {/* Simplified Timestamp Inspector */}
-        <section className="panel">
-          <div className="panel-header bg-slate-50/50">
+        <section className="panel overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
+          <div className="panel-header bg-[#f3f7f4]">
             <div>
               <div className="flex items-center gap-1.5">
                 <p className="eyebrow">Timestamp Inspector</p>
                 {selectedPoint.dayLabel && (
-                  <span className="text-[10px] font-semibold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-grid-line">
+                  <span className="rounded border border-[#dfe7e1] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
                     {selectedPoint.dayLabel}
                   </span>
                 )}
@@ -407,17 +407,17 @@ export function Forecast() {
 
             <div className="flex items-center gap-2">
               <RiskBadge risk={selectedPoint.risk} />
-              <div className="flex items-center rounded-md border border-grid-line bg-white shadow-xs">
+              <div className="flex items-center rounded-md border border-[#dfe7e1] bg-white shadow-xs">
                 <button
                   onClick={() => handleStepHour("prev")}
-                  className="p-1.5 hover:bg-slate-50 text-slate-600 transition rounded-l-md"
+                  className="rounded-l-md p-1.5 text-slate-600 transition hover:bg-[#f3f7f4]"
                   title="Previous hour"
                 >
                   <ChevronLeft size={15} />
                 </button>
                 <button
                   onClick={() => handleStepHour("next")}
-                  className="p-1.5 hover:bg-slate-50 text-slate-600 transition border-l border-grid-line rounded-r-md"
+                  className="rounded-r-md border-l border-[#dfe7e1] p-1.5 text-slate-600 transition hover:bg-[#f3f7f4]"
                   title="Next hour"
                 >
                   <ChevronRight size={15} />
@@ -428,24 +428,24 @@ export function Forecast() {
 
           <div className="panel-body space-y-3.5">
             {/* Expected Generation Hero */}
-            <div className="rounded-lg bg-emerald-50/80 border border-emerald-300 p-3.5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-900">
+            <div className="rounded-xl border border-[#d6e7dd] bg-[#eef8f2] p-3.5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#386c58]">
                 Expected Solar Generation
               </p>
               <div className="mt-1 flex items-baseline justify-between">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-extrabold text-emerald-950">
+                  <span className="text-3xl font-extrabold text-[#1b3e33]">
                     {selectedPoint.expected.toFixed(1)}
                   </span>
-                  <span className="text-sm font-bold text-emerald-800">MW</span>
+                  <span className="text-sm font-bold text-[#386c58]">MW</span>
                 </div>
-                <span className="text-xs font-semibold text-emerald-700">
+                <span className="text-xs font-semibold text-[#386c58]">
                   {((selectedPoint.expected / site.capacityMw) * 100).toFixed(1)}% capacity
                 </span>
               </div>
 
               {selectedPoint.historical !== undefined && (
-                <p className="mt-2 text-xs text-slate-600 border-t border-emerald-200/80 pt-1.5 flex justify-between">
+                <p className="mt-2 flex justify-between border-t border-[#d6e7dd] pt-1.5 text-xs text-slate-600">
                   <span>Measured Actual:</span>
                   <span className="font-semibold text-slate-800">{selectedPoint.historical.toFixed(1)} MW</span>
                 </p>
@@ -474,19 +474,19 @@ export function Forecast() {
               />
 
               {/* Confidence Progress Bar */}
-              <div className="rounded-md border border-grid-line bg-slate-50 p-2.5 mt-2">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-600 font-medium">Forecast Confidence</span>
+              <div className="mt-2 rounded-xl border border-[#dfe7e1] bg-[#f3f7f4] p-2.5">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="font-medium text-slate-600">Forecast Confidence</span>
                   <span className="font-bold text-slate-800">{selectedPoint.confidenceScore ?? 80}%</span>
                 </div>
-                <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
                       (selectedPoint.confidenceScore ?? 80) > 80
-                        ? "bg-emerald-500"
+                        ? "bg-[#3a6d58]"
                         : (selectedPoint.confidenceScore ?? 80) > 65
-                          ? "bg-amber-500"
-                          : "bg-red-500"
+                          ? "bg-[#a78b52]"
+                          : "bg-[#9b3f42]"
                     }`}
                     style={{ width: `${selectedPoint.confidenceScore ?? 80}%` }}
                   />
@@ -547,12 +547,12 @@ export function Forecast() {
                   </p>
                 </div>
 
-                <div className="rounded-md border border-amber-200 bg-amber-50/70 p-3 text-amber-900 space-y-1">
+                <div className="space-y-1 rounded-xl border border-[#e5d9c2] bg-[#f9f1e5] p-3 text-[#6d5d3e]">
                   <div className="flex items-center gap-1.5 font-bold">
-                    <Info size={14} className="text-amber-700 shrink-0" />
+                      <Info size={14} className="shrink-0 text-[#7d6944]" />
                     <span>Uncertainty Rationale:</span>
                   </div>
-                  <p className="text-[11px] leading-relaxed text-amber-800">
+                    <p className="text-[11px] leading-relaxed text-[#6d5d3e]">
                     {selectedPoint.risk === "HIGH"
                       ? "The uncertainty band widens to ±" + halfSpread + " MW due to convective cloud boundary dynamics during evening transition."
                       : selectedPoint.risk === "MEDIUM"
@@ -562,8 +562,8 @@ export function Forecast() {
                 </div>
 
                 {isDeficit && (
-                  <div className="rounded-md border border-red-200 bg-red-50 p-3 text-red-900 text-[11px] flex items-start gap-2">
-                    <AlertTriangle size={15} className="text-red-700 shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-2 rounded-xl border border-[#ebd5d2] bg-[#fff1f0] p-3 text-[11px] text-[#7d3432]">
+                      <AlertTriangle size={15} className="mt-0.5 shrink-0 text-[#9b3f42]" />
                     <div>
                       <span className="font-bold">Operational Impact: </span>
                       <span>
@@ -642,7 +642,7 @@ export function Forecast() {
                           key={pt.hour}
                           onClick={() => handleSelectPoint(pt)}
                           className={`cursor-pointer transition hover:bg-slate-50 ${
-                            isSelected ? "bg-teal-50/70 font-medium text-teal-950" : ""
+                            isSelected ? "bg-[#edf8f2] font-medium text-[#234b3e]" : ""
                           }`}
                         >
                           <td className="py-1.5 px-3 font-semibold text-grid-ink">
@@ -654,7 +654,7 @@ export function Forecast() {
                                 Actual
                               </span>
                             ) : (
-                              <span className="rounded bg-teal-50 text-teal-700 px-1.5 py-0.5 text-[10px] font-medium border border-teal-200">
+                              <span className="rounded border border-[#dfe7e1] bg-[#eef8f2] px-1.5 py-0.5 text-[10px] font-medium text-[#386c58]">
                                 Model
                               </span>
                             )}
@@ -665,10 +665,10 @@ export function Forecast() {
                           <td className="py-1.5 px-3 text-slate-600">
                             {pt.lower.toFixed(1)} - {pt.upper.toFixed(1)}
                           </td>
-                          <td className="py-1.5 px-3 text-red-600 font-medium">
+                          <td className="py-1.5 px-3 font-medium text-[#9b3f42]">
                             {pt.demand.toFixed(1)} MW
                           </td>
-                          <td className={`py-1.5 px-3 font-semibold ${isNeg ? "text-red-700" : "text-emerald-700"}`}>
+                          <td className={`py-1.5 px-3 font-semibold ${isNeg ? "text-[#9b3f42]" : "text-[#386c58]"}`}>
                             {isNeg ? `${bal.toFixed(1)} MW` : `+${bal.toFixed(1)} MW`}
                           </td>
                           <td className="py-1.5 px-3 text-slate-600">{pt.cloudCover}%</td>
@@ -716,9 +716,9 @@ function MetricRow({
 }) {
   const toneClasses = {
     default: "text-grid-ink font-bold",
-    risk: "text-red-700 font-bold",
-    amber: "text-amber-800 font-bold",
-    positive: "text-emerald-700 font-bold"
+    risk: "text-[#9b3f42] font-bold",
+    amber: "text-[#7d6944] font-bold",
+    positive: "text-[#386c58] font-bold"
   };
 
   return (
@@ -746,15 +746,15 @@ function WeatherTile({
   warning?: boolean;
 }) {
   return (
-    <div className={`rounded-md border p-2.5 transition ${
-      warning ? "border-red-200 bg-red-50/50" : "border-grid-line bg-slate-50/50"
+    <div className={`rounded-xl border p-2.5 transition ${
+      warning ? "border-[#ebd5d2] bg-[#fff1f0]" : "border-[#dfe7e1] bg-[#f3f7f4]"
     }`}>
       <div className="flex items-center justify-between text-slate-500">
         <span className="text-[10px] font-semibold uppercase tracking-wider">{label}</span>
-        <Icon size={13} className={warning ? "text-red-600" : "text-slate-400"} />
+        <Icon size={13} className={warning ? "text-[#9b3f42]" : "text-slate-400"} />
       </div>
       <p className="mt-1 text-sm font-bold text-grid-ink">{value}</p>
-      <p className={`mt-0.5 text-[10px] font-medium ${warning ? "text-red-600 font-bold" : "text-slate-500"}`}>
+      <p className={`mt-0.5 text-[10px] font-medium ${warning ? "text-[#9b3f42] font-bold" : "text-slate-500"}`}>
         {status}
       </p>
     </div>

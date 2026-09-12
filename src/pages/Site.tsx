@@ -5,13 +5,13 @@ import { SystemStatus } from "../components/layout/SystemStatus";
 export function Site() {
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <section className="panel">
-        <div className="panel-header">
+      <section className="panel overflow-hidden border-[#dfe7e1] bg-[#f9faf9]">
+        <div className="panel-header bg-[#f3f7f4]">
           <div>
             <p className="eyebrow">Site overview</p>
             <h2 className="mt-1 text-base font-semibold text-grid-ink">{site.name}</h2>
           </div>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-grid-green">ONLINE</span>
+          <span className="rounded-full border border-[#d6e7dd] bg-[#eef8f2] px-2 py-1 text-[11px] font-bold text-[#386c58]">ONLINE</span>
         </div>
         <div className="panel-body">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -23,11 +23,11 @@ export function Site() {
             <InfoCard icon={ShieldCheck} label="Backup availability" value={site.backupAvailable ? "Available" : "Unavailable"} />
           </div>
 
-          <div className="mt-5 rounded-lg border border-grid-line">
-            <div className="border-b border-grid-line px-4 py-3">
+          <div className="mt-5 rounded-lg border border-[#dfe7e1] bg-white/70">
+            <div className="border-b border-[#dfe7e1] px-4 py-3">
               <p className="heading-sm">Operating limits</p>
             </div>
-            <div className="grid divide-y divide-grid-line md:grid-cols-2 md:divide-x md:divide-y-0">
+            <div className="grid divide-y divide-[#dfe7e1] md:grid-cols-2 md:divide-x md:divide-y-0">
               <Limit label="Battery capacity" value={`${site.batteryCapacityMwh} MWh`} />
               <Limit label="Charge limit" value={`${site.chargeLimitMw} MW`} />
               <Limit label="Discharge limit" value={`${site.dischargeLimitMw} MW`} />
@@ -44,8 +44,8 @@ export function Site() {
 
 function InfoCard({ icon: Icon, label, value }: { icon: typeof Sun; label: string; value: string }) {
   return (
-    <article className="rounded-lg border border-grid-line bg-slate-50/50 p-4">
-      <div className="flex items-center gap-2 text-grid-teal">
+    <article className="rounded-xl border border-[#dfe7e1] bg-[#f4faf6] p-4 shadow-sm shadow-slate-200/30">
+      <div className="flex items-center gap-2 text-[#396553]">
         <Icon size={18} />
         <p className="eyebrow">{label}</p>
       </div>

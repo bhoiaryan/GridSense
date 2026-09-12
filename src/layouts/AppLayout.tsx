@@ -25,18 +25,32 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-grid-bg text-grid-ink">
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-grid-sidebar text-white lg:flex border-r border-[#153e2c]">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-emerald-900/70 bg-[radial-gradient(circle_at_top,_rgba(20,83,45,0.75),_rgba(9,29,22,0.98)_56%)] text-white shadow-[0_20px_40px_rgba(6,20,16,0.25)] lg:flex">
         <div className="border-b border-white/10 px-5 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30">
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-300/15 bg-white/5 px-3 py-2.5 shadow-inner shadow-emerald-950/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-emerald-50 shadow-lg shadow-emerald-900/30">
               <Activity size={20} />
             </div>
             <div>
               <p className="text-sm font-bold tracking-tight text-white">GridSense AI</p>
-              <p className="text-xs text-grid-sidebarMuted">Renewable intelligence</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-emerald-200/80">Renewable intelligence</p>
             </div>
           </div>
         </div>
+
+        <div className="px-3 pt-4">
+          <div className="rounded-2xl border border-emerald-300/15 bg-white/5 p-3 shadow-inner shadow-emerald-950/20">
+            <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-200/80">
+              <span>Grid health</span>
+              <span>96%</span>
+            </div>
+            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-emerald-950/60">
+              <div className="h-full w-[96%] rounded-full bg-gradient-to-r from-emerald-300 via-emerald-400 to-lime-300" />
+            </div>
+            <p className="mt-3 text-[11px] leading-5 text-slate-300">All core services stable across generation, risk, and balancing layers.</p>
+          </div>
+        </div>
+
         <nav className="flex-1 space-y-1.5 px-3 py-4">
           {navigation.map((item) => (
             <NavLink
@@ -45,26 +59,28 @@ export function AppLayout() {
               end={item.path === "/"}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition",
+                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "bg-[#184431] text-emerald-300 font-semibold shadow-xs border-l-2 border-emerald-400"
-                    : "text-grid-sidebarMuted hover:bg-[#153c2b] hover:text-white"
+                    ? "border border-emerald-400/20 bg-emerald-500/10 text-emerald-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                    : "text-slate-300 hover:bg-white/5 hover:text-white"
                 )
               }
             >
-              <item.icon size={17} />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-slate-900/20 text-slate-300 transition-colors duration-200 group-hover:border-emerald-300/20 group-hover:text-white">
+                <item.icon size={16} />
+              </span>
               {item.label}
             </NavLink>
           ))}
         </nav>
         {location.pathname !== "/" && (
           <div className="border-t border-white/10 p-4">
-            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300">
-                <BatteryCharging size={15} />
+            <div className="rounded-2xl border border-emerald-300/10 bg-gradient-to-br from-emerald-500/10 to-transparent p-3.5">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                <BatteryCharging size={14} />
                 System Status
               </div>
-              <p className="mt-2 text-xs leading-5 text-grid-sidebarMuted">
+              <p className="mt-2 text-xs leading-5 text-slate-300">
                 Forecast, risk, and decision services are running in demo mode.
               </p>
             </div>
@@ -73,7 +89,7 @@ export function AppLayout() {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-10 border-b border-grid-line bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-10 border-b border-white/60 bg-white/80 backdrop-blur-xl">
           <div className="flex min-h-16 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between lg:px-6">
             <div>
               <p className="eyebrow">GridSense AI</p>
@@ -82,27 +98,27 @@ export function AppLayout() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {location.pathname !== "/" && (
-                <div className="hidden items-center gap-2 rounded-md border border-grid-line bg-slate-50 px-3 py-2 text-sm text-grid-muted md:flex">
-                  <Search size={15} />
+                <div className="hidden items-center gap-2 rounded-xl border border-grid-line bg-slate-50/90 px-3 py-2 text-sm text-grid-muted shadow-sm md:flex">
+                  <Search size={15} className="text-emerald-700" />
                   <span>{site.name}</span>
                 </div>
               )}
-              <select aria-label="Site" className="field min-w-44" defaultValue={site.id}>
+              <select aria-label="Site" className="field min-w-44 shadow-sm" defaultValue={site.id}>
                 <option value={site.id}>{site.name}</option>
               </select>
               {location.pathname !== "/" && (
-                <select className="field" defaultValue="24h">
+                <select className="field shadow-sm" defaultValue="24h">
                   <option value="24h">Next 24 hours</option>
                   <option value="48h">Next 48 hours</option>
                   <option value="72h">Next 72 hours</option>
                 </select>
               )}
-              <button className="button-secondary" aria-label="Notifications">
+              <button className="button-secondary shadow-sm" aria-label="Notifications">
                 <Bell size={16} />
               </button>
             </div>
           </div>
-          <nav className="flex gap-1 overflow-x-auto border-t border-grid-line px-3 py-2 lg:hidden" aria-label="Primary navigation">
+          <nav className="flex gap-1 overflow-x-auto border-t border-grid-line/80 bg-emerald-50/40 px-3 py-2 lg:hidden" aria-label="Primary navigation">
             {navigation.map((item) => (
               <NavLink
                 key={item.path}
@@ -110,8 +126,8 @@ export function AppLayout() {
                 end={item.path === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-emerald-600",
-                    isActive ? "bg-grid-teal text-white" : "text-grid-muted hover:bg-emerald-50 hover:text-grid-ink"
+                    "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-emerald-600",
+                    isActive ? "bg-grid-teal text-white shadow-sm" : "text-grid-muted hover:bg-white hover:text-grid-ink"
                   )
                 }
               >
