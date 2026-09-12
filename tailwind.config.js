@@ -5,22 +5,25 @@ export default {
     extend: {
       colors: {
         grid: {
-          bg: "#f5f7fa",
-          panel: "#ffffff",
-          sidebar: "#111827",
-          sidebarMuted: "#9ca3af",
-          line: "#d9e0e8",
-          ink: "#0f172a",
-          muted: "#64748b",
-          teal: "#0f766e",
-          blue: "#2563eb",
-          green: "#15803d",
-          amber: "#b45309",
-          red: "#b91c1c"
+          bg: "#edf4f0",           // Soft Nordic sage background
+          panel: "#ffffff",        // Crisp white card panels
+          sidebar: "#0d261b",      // Deep Nordic spruce / pine
+          sidebarMuted: "#8fa99c", // Soft sage muted text
+          sidebarHover: "#163a2b", // Hover state in sidebar
+          sidebarActive: "#1a4634",// Active state in sidebar
+          line: "#334d3f",         // Prominent dark forest border
+          lineDark: "#1a3326",     // Extra dark accent border
+          ink: "#0c2419",          // Deep pine black text
+          muted: "#4e6b5d",        // Calm forest slate muted text
+          teal: "#047857",         // Primary forest emerald / pine teal
+          emerald: "#059669",      // Vibrant energy green
+          green: "#15803d",        // Forest green
+          amber: "#b45309",        // Warm sunlight amber
+          red: "#b91c1c"           // Alert crimson
         }
       },
       boxShadow: {
-        card: "0 1px 2px rgba(15, 23, 42, 0.06)"
+        card: "0 1px 3px rgba(12, 36, 25, 0.05), 0 1px 2px rgba(12, 36, 25, 0.03)"
       }
     }
   },

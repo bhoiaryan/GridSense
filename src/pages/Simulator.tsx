@@ -11,7 +11,7 @@ export function Simulator() {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Scenario controls</p>
-            <h2 className="mt-1 text-lg font-semibold text-grid-ink">Modify operating assumptions</h2>
+            <h2 className="mt-1 text-base font-semibold text-grid-ink">Modify operating assumptions</h2>
           </div>
         </div>
         <div className="panel-body space-y-5">
@@ -44,7 +44,7 @@ export function Simulator() {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Scenario results</p>
-            <h2 className="mt-1 text-lg font-semibold text-grid-ink">Baseline vs scenario</h2>
+            <h2 className="mt-1 text-base font-semibold text-grid-ink">Baseline vs scenario</h2>
           </div>
         </div>
         <div className="panel-body">
@@ -52,7 +52,7 @@ export function Simulator() {
             <ResultCard title="Baseline" generation={baseline.generationMw} shortfall={baseline.shortfallMwh} risk={baseline.risk} recommendation={baseline.recommendation} />
             <ResultCard title="Scenario" generation={result.generationMw} shortfall={result.shortfallMwh} risk={result.risk} recommendation={result.recommendation} />
           </div>
-          <div className="mt-5 rounded-lg border border-grid-line bg-slate-50 p-4">
+          <div className="mt-5 rounded-lg border border-grid-line bg-slate-50/50 p-4">
             <p className="eyebrow">Why did the recommendation change?</p>
             <p className="mt-2 text-sm leading-6 text-grid-ink">{result.explanation}</p>
           </div>
@@ -76,7 +76,7 @@ function Slider({ label, value, suffix, min, max, onChange }: { label: string; v
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className="flex items-center justify-between rounded-md border border-grid-line bg-slate-50 px-3 py-2">
+    <label className="flex items-center justify-between rounded-md border border-grid-line bg-slate-50/50 px-3 py-2.5">
       <span className="text-sm font-semibold text-grid-ink">{label}</span>
       <input className="h-4 w-4 accent-grid-teal" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
     </label>
@@ -94,7 +94,7 @@ function ResultCard({ title, generation, shortfall, risk, recommendation }: { ti
         <Metric label="Avg generation" value={`${generation.toFixed(1)} MW`} />
         <Metric label="Shortfall" value={`${shortfall.toFixed(1)} MWh`} />
       </div>
-      <p className="mt-4 rounded-md bg-slate-50 p-3 text-sm font-semibold text-grid-ink">{recommendation}</p>
+      <p className="mt-4 rounded-md border border-grid-line bg-slate-50/50 p-3 text-sm font-semibold text-grid-ink">{recommendation}</p>
     </article>
   );
 }

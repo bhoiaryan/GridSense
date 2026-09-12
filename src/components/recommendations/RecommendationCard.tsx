@@ -7,20 +7,23 @@ interface RecommendationCardProps {
 
 export function RecommendationCard({ recommendation }: RecommendationCardProps) {
   return (
-    <section className="panel">
-      <div className="panel-header">
+    <section className="panel border-teal-200 bg-teal-50/30">
+      <div className="panel-header border-teal-100">
         <div>
-          <p className="eyebrow">AI recommendation</p>
-          <h2 className="mt-1 text-lg font-semibold text-grid-ink">{recommendation.action}</h2>
+          <p className="eyebrow text-grid-teal">AI recommendation</p>
+          <h2 className="mt-1 text-xl font-bold text-grid-ink">{recommendation.action}</h2>
+          <p className="mt-1 text-xs text-grid-muted">Advisory only. Operator approval required.</p>
         </div>
-        <CheckCircle2 className="text-grid-teal" size={22} />
+        <div className="rounded-md border border-teal-200 bg-white p-2 text-grid-teal">
+          <CheckCircle2 size={22} />
+        </div>
       </div>
       <div className="panel-body space-y-4">
-        <div>
+        <div className="rounded-md border border-teal-100 bg-white p-3">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-grid-muted">Reason</p>
           <p className="mt-1 text-sm text-grid-ink">{recommendation.reason}</p>
         </div>
-        <div>
+        <div className="rounded-md border border-teal-100 bg-white p-3">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-grid-muted">Expected impact</p>
           <p className="mt-1 text-sm text-grid-ink">{recommendation.expectedImpact}</p>
         </div>
@@ -32,7 +35,7 @@ export function RecommendationCard({ recommendation }: RecommendationCardProps) 
             </li>
           ))}
         </ul>
-        <button className="button-primary w-full">
+        <button className="button-primary w-full" type="button">
           View Details
           <ArrowRight size={16} />
         </button>

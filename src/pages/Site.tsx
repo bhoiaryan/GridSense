@@ -9,7 +9,7 @@ export function Site() {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Site overview</p>
-            <h2 className="mt-1 text-lg font-semibold text-grid-ink">{site.name}</h2>
+            <h2 className="mt-1 text-base font-semibold text-grid-ink">{site.name}</h2>
           </div>
           <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-grid-green">ONLINE</span>
         </div>
@@ -44,7 +44,7 @@ export function Site() {
 
 function InfoCard({ icon: Icon, label, value }: { icon: typeof Sun; label: string; value: string }) {
   return (
-    <article className="rounded-lg border border-grid-line bg-slate-50 p-4">
+    <article className="rounded-lg border border-grid-line bg-slate-50/50 p-4">
       <div className="flex items-center gap-2 text-grid-teal">
         <Icon size={18} />
         <p className="eyebrow">{label}</p>

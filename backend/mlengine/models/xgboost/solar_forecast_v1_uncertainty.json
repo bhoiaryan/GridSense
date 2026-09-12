@@ -1,0 +1,14 @@
+{
+  "method": "residual_percentile",
+  "percentile": 90.0,
+  "absolute_error_threshold_mw": 0.5945,
+  "validation_samples": 1310,
+  "validation_date_range": [
+    "2025-09-13 19:00:00",
+    "2025-11-07 08:00:00"
+  ],
+  "target_column": "generation_mw",
+  "model_version": "solar_forecast_v1",
+  "calibrated": false,
+  "notes": "Empirical prediction interval based on the 90th percentile of absolute validation residuals. Non-calibrated band; lower bounds are physically clamped at 0.0 MW."
+}
