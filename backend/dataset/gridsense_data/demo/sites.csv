@@ -1,4 +1,0 @@
-site_id,site_name,latitude,longitude,capacity_mw,battery_capacity_mwh,battery_max_power_mw,backup_capacity_mw
-SITE_001,Gujarat Solar Farm,23.2156,72.6369,50,40,20,15
-SITE_002,Rajasthan Solar Farm,26.9124,75.7873,75,60,30,20
-SITE_003,Maharashtra Solar Farm,19.076,72.8777,40,30,15,10
