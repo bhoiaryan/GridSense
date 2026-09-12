@@ -8,7 +8,8 @@ const router = Router();
 router.get("/dashboard/:site_id", async (req: Request, res: Response) =>
 {
   const rawSiteId = Array.isArray(req.params.site_id) ? req.params.site_id[0] : req.params.site_id;
-  if (!rawSiteId) {
+  if (!rawSiteId)
+  {
     return res.status(400).json({ error: "Missing site_id parameter" });
   }
   const siteId = resolveSiteId(rawSiteId);

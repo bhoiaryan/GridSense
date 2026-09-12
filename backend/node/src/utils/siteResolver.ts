@@ -5,7 +5,9 @@ export const SITE_ALIASES: Record<string, string> = {
   "SITE_003": "SITE_003",
 };
 
-export function resolveSiteId(id: string): string {
+export function resolveSiteId(id: string): string
+{
   if (!id) return "SITE_001";
   return SITE_ALIASES[id] || id;
 }
+

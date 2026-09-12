@@ -302,3 +302,4 @@ class SystemStatusItemSchema(BaseModel):
 2.  **Gateway Compatible**: Directly matches `backend/node/src/types/index.ts`.
 3.  **ML Engine Ready**: Python Pydantic definitions are defined and ready to drop into `backend/ml/app/main.py`.
 4.  **Dataset Compatible**: Reconciles `solar-01` with `SITE_001` through the Node resolver.
+

@@ -21,7 +21,8 @@ router.get("/sites/:id", async (req: Request, res: Response) =>
   try
   {
     const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    if (!rawId) {
+    if (!rawId)
+    {
       return res.status(400).json({ error: "Missing site id parameter" });
     }
     const siteId = resolveSiteId(rawId);
