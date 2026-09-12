@@ -1,0 +1,74 @@
+{
+  "model_name": "solar_forecast_v1",
+  "algorithm": "XGBRegressor",
+  "target_column": "generation_mw",
+  "feature_columns": [
+    "generation_lag_1",
+    "generation_lag_2",
+    "generation_lag_3",
+    "generation_lag_24",
+    "generation_rolling_mean_3",
+    "generation_rolling_mean_6",
+    "generation_rolling_mean_24",
+    "generation_trend_3",
+    "hour",
+    "day_of_week",
+    "month",
+    "day_of_year",
+    "is_daytime",
+    "irradiance",
+    "cloud_cover",
+    "temperature",
+    "installed_capacity_mw"
+  ],
+  "split_ratios": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15
+  },
+  "row_counts": {
+    "total": 8736,
+    "train": 6115,
+    "validation": 1310,
+    "test": 1311
+  },
+  "date_ranges": {
+    "train": [
+      "2025-01-02 00:00:00",
+      "2025-09-13 18:00:00"
+    ],
+    "validation": [
+      "2025-09-13 19:00:00",
+      "2025-11-07 08:00:00"
+    ],
+    "test": [
+      "2025-11-07 09:00:00",
+      "2025-12-31 23:00:00"
+    ]
+  },
+  "test_metrics": {
+    "sample_count": 1311,
+    "mae": 0.1642,
+    "rmse": 0.3146,
+    "mape": 1.67,
+    "mape_threshold_mw": 1.0,
+    "mape_sample_count": 548,
+    "mape_limitation_note": "MAPE calculated only on active generation >= 1.0 MW (548/1311 samples) to avoid division-by-zero on nighttime zeroes."
+  },
+  "uncertainty_evaluation": {
+    "sample_count": 1311,
+    "coverage_percentage": 91.15,
+    "covered_samples": 1195,
+    "average_interval_width_mw": 0.8483
+  },
+  "hyperparameters": {
+    "n_estimators": 120,
+    "max_depth": 5,
+    "learning_rate": 0.08,
+    "subsample": 0.85,
+    "colsample_bytree": 0.85,
+    "objective": "reg:squarederror",
+    "random_state": 42,
+    "n_jobs": -1
+  }
+}

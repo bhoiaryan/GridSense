@@ -1,0 +1,7 @@
+{
+  "id": "solar-01",
+  "name": "Solar Plant 01",
+  "location": "Demo Location",
+  "technology": "solar",
+  "capacity_mw": 100
+}
