@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import { mlClient } from "../services/mlClient.js";
+import { resolveSiteId } from "../utils/siteResolver.js";
 
 const router = Router();
 
@@ -19,11 +20,11 @@ router.get("/sites/:id", async (req: Request, res: Response) =>
 {
   try
   {
-    const siteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    if (!siteId)
-    {
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!rawId) {
       return res.status(400).json({ error: "Missing site id parameter" });
     }
+    const siteId = resolveSiteId(rawId);
     const site = await mlClient.getSiteById(siteId);
     if (!site)
     {
